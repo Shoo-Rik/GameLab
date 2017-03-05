@@ -46,11 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChooseAction.cs">
+    <Compile Include="AttackForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ChooseAction.Designer.cs">
-      <DependentUpon>ChooseAction.cs</DependentUpon>
+    <Compile Include="AttackForm.Designer.cs">
+      <DependentUpon>AttackForm.cs</DependentUpon>
     </Compile>
     <Compile Include="MapForm.cs">
       <SubType>Form</SubType>
@@ -58,24 +58,18 @@
     <Compile Include="MapForm.Designer.cs">
       <DependentUpon>MapForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="MapGenerator.cs" />
     <Compile Include="MapInfoSerializer.cs" />
+    <Compile Include="Model.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RegionInformationForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="RegionInformationForm.Designer.cs">
-      <DependentUpon>RegionInformationForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="StartupForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="StartupForm.Designer.cs">
       <DependentUpon>StartupForm.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="ChooseAction.resx">
-      <DependentUpon>ChooseAction.cs</DependentUpon>
+    <EmbeddedResource Include="AttackForm.resx">
+      <DependentUpon>AttackForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MapForm.resx">
       <DependentUpon>MapForm.cs</DependentUpon>
@@ -90,9 +84,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="RegionInformationForm.resx">
-      <DependentUpon>RegionInformationForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="StartupForm.resx">
       <DependentUpon>StartupForm.cs</DependentUpon>
     </EmbeddedResource>

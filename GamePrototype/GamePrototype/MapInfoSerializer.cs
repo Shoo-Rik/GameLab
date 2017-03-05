@@ -18,6 +18,9 @@ namespace GamePrototype
         [XmlAttribute]
         public int Color { get; set; }
 
+        [XmlAttribute]
+        public int Step { get; set; }
+
         [XmlElement("Info")]
         public RegionInformation[] Info { get; set; }
     }
@@ -41,6 +44,7 @@ namespace GamePrototype
                     throw new ArgumentException("Incorrect array length.");
 
                 result.OwnColor = map.Color;
+                result.Step = map.Step;
                 result.Info = new RegionInformation[map.Width, map.Length];
                 int width = 0;
                 int height = 0;
@@ -69,6 +73,7 @@ namespace GamePrototype
                 Width = mapInfo.Info.GetLength(0),
                 Length = mapInfo.Info.GetLength(1),
                 Color = mapInfo.OwnColor,
+                Step = mapInfo.Step,
                 Info = mapInfo.Info.Cast<RegionInformation>().ToArray()
             };
 

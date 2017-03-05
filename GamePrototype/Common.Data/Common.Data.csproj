@@ -38,9 +38,11 @@
     <Content Include="Documents\Description.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GameAction.cs" />
     <Compile Include="Army.cs" />
     <Compile Include="Battle.cs" />
     <Compile Include="Coordinates.cs" />
+    <Compile Include="GameMode.cs" />
     <Compile Include="Land.cs" />
     <Compile Include="MapInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

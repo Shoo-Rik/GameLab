@@ -7,116 +7,60 @@ namespace GamePrototype
 {
     public partial class MapForm : Form
     {
-        private MapInfo _mapInfo;
+        private readonly Model _model;
 
-        public MapForm(MapInfo mapInfo)
+        public MapForm(Model model)
         {
-            if (mapInfo == null || mapInfo.Info == null)
-                throw new ArgumentNullException(); 
-
             InitializeComponent();
 
-            _mapInfo = mapInfo;
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
+            _model = model;
+            _model.ModeChangedEvent += OnModeChanged;
         }
 
-        private static readonly Random Rnd = new Random((int)DateTime.UtcNow.ToFileTime());
-
-        public static MapInfo InitializeMapInfo(int color)
+        private void OnModeChanged(GameMode mode)
         {
-            var result = new MapInfo {OwnColor = color};
-
-            var info1 = new RegionInformation { LandId = 0xFF0000 };
-            var info2 = new RegionInformation { LandId = 0x00FF00 };
-            var info3 = new RegionInformation { LandId = 0x0000FF };
-
-            const int widthCount = 10;
-            const int heightCount = 10;
-            result.Info = new RegionInformation[widthCount, heightCount];
-
-            for (int wIndex = 0; wIndex < widthCount; ++wIndex)
+            switch (mode)
             {
-                for (int hIndex = 0; hIndex < heightCount; ++hIndex)
-                {
-                    switch (Rnd.Next(3))
-                    {
-                        case 0: result.Info[wIndex, hIndex] = info1; break;
-                        case 1: result.Info[wIndex, hIndex] = info2; break;
-                        case 2: result.Info[wIndex, hIndex] = info3; break;
-                        default: throw new NotSupportedException("Random value");
-                    }
-                }
-            }
-            return result;
-        }
+                case GameMode.Attack:
+                    EnableActionButtons(false);
+                    break;
 
-        private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
-        {
-            Point location = e.Location;
-            int size = MapGenerator.RegionSize;
-            int widthIndex = location.X/size;
-            int heightIndex = location.Y/size;
-
-            //            MessageBox.Show(string.Format("width index = {0}, height index = {1}",
-            //                location.X / size + 1, location.Y / size + 1));
-
-            RegionInformation regionInfo = _mapInfo.Info[widthIndex, heightIndex];
-            bool ownRegion = (regionInfo.LandId == _mapInfo.OwnColor);
-
-            if (ownRegion)
-            {
-                var chooseAction = new ChooseAction();
-                if (chooseAction.ShowDialog() != DialogResult.OK)
-                    return;
-
-                regionInfo.LandId = 0x00FF00;
-                Refresh();
-
-                // [TODO]: Try implement pattern
-                switch (chooseAction.Result)
-                {
-                    case ChosenAction.ShowInformation:
-                        var infoForm = new RegionInformationForm(regionInfo);
-                        infoForm.ShowDialog();
-                        break;
-
-                    case ChosenAction.CallReserve:
-                        break;
-
-                    case ChosenAction.Attack:
-                        break;
-
-                    case ChosenAction.Defend:
-                        break;
-
-                    case ChosenAction.JoinArmies:
-                        break;
-
-                    case ChosenAction.SplitArmy:
-                        break;
-
-                    case ChosenAction.MoveArmy:
-                        break;
-
-                    default:
-                        throw new InvalidOperationException("Unknown option");
-                }
-            }
-            else
-            {
-                var infoForm = new RegionInformationForm(regionInfo);
-                infoForm.ShowDialog();
+                case GameMode.Normal:
+                    EnableActionButtons(true);
+                    break;
             }
         }
 
-        private void pictureBox1_Paint(object sender, PaintEventArgs e)
+        private void EnableActionButtons(bool enable)
         {
-            Bitmap bmp = Invite.GenerateMap(MapGenerator.RegionSize, _mapInfo.Info);
-            e.Graphics.DrawImage(bmp, new Point(0, 0));
+            btnDefendRegion.Enabled = enable;
+            btnGetReserve.Enabled = enable;
+            btnJoinArmies.Enabled = enable;
+            btnMakeStep.Enabled = enable;
+            btnMoveArmy.Enabled = enable;
+            btnSplitArmy.Enabled = enable;
+            btnAttackNearRegion.Enabled = enable;
+        }
+
+        private void UpdateListBox(string[] strings)
+        {
+            listBox1.Items.Clear();
+            Array.ForEach(strings, item => listBox1.Items.Add(item));
+        }
+
+        private void mapBox_Paint(object sender, PaintEventArgs e)
+        {
+            e.Graphics.DrawImage(_model.GenerateMap(), new Point(0, 0));
         }
 
         private void MapForm_Load(object sender, EventArgs e)
         {
-            pictureBox1.Image = Invite.GenerateMap(MapGenerator.RegionSize, _mapInfo.Info);
+            _model.GetArmyToAttackFunc = GetArmyCountToAttack;
+
+            UpdateListBox(_model.GetRegionInfoStrings());
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -126,7 +70,7 @@ namespace GamePrototype
                 if (saveDlg.ShowDialog() != DialogResult.OK)
                     return;
 
-                MapInfoSerializer.Serialize(_mapInfo, saveDlg.FileName);
+                _model.Save(saveDlg.FileName);
             }
         }
 
@@ -135,12 +79,87 @@ namespace GamePrototype
             Close();
         }
 
-        private void pictureBox2_Paint(object sender, PaintEventArgs e)
+        private void ownColorBox_Paint(object sender, PaintEventArgs e)
         {
             Bitmap bmp = new Bitmap(e.ClipRectangle.Width, e.ClipRectangle.Height);
             Graphics gr = Graphics.FromImage(bmp);
-            gr.FillRectangle(Invite.CreateBrush(_mapInfo.OwnColor), e.ClipRectangle);
+            gr.FillRectangle(Model.CreateBrush(_model.GetOwnColor()), e.ClipRectangle);
             e.Graphics.DrawImage(bmp, new Point(0, 0));
+        }
+
+        private void mapBox_MouseClick(object sender, MouseEventArgs e)
+        {
+            _model.ProcessMouseClick(e.Location);
+            UpdateListBox(_model.GetRegionInfoStrings());
+            Refresh();
+        }
+
+        private void btnAttackNearRegion_Click(object sender, EventArgs e)
+        {
+            if (!_model.ProcessAction(GameAction.Attack))
+            {
+                MessageBox.Show(this, "Сначала выберите свой регион.", "Атаковать соседний регион", MessageBoxButtons.OK);
+                return;
+            }
+
+            Refresh();
+
+            MessageBox.Show("Выберите регион для атаки.", "Атака", MessageBoxButtons.OK);
+        }
+
+        private void btnDefendRegion_Click(object sender, EventArgs e)
+        {
+            // TODO
+        }
+
+        private void btnMoveArmy_Click(object sender, EventArgs e)
+        {
+            // TODO
+        }
+
+        private void btnJoinArmies_Click(object sender, EventArgs e)
+        {
+            // TODO
+        }
+
+        private void btnSplitArmy_Click(object sender, EventArgs e)
+        {
+            // TODO
+        }
+
+        private void btnGetReserve_Click(object sender, EventArgs e)
+        {
+            // TODO
+        }
+
+        private void btnMakeStep_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(this, "Вы уверены?", "Сделать ход", MessageBoxButtons.YesNo) == DialogResult.No)
+                return;
+
+            _model.IncrementStep();
+
+            UpdateListBox(_model.GetRegionInfoStrings());
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            _model.ProcessAction(GameAction.Cancel);
+
+            Refresh();
+        }
+
+        private int GetArmyCountToAttack(RegionInformation sourceRegion, RegionInformation attackedRegion)
+        {
+            var attackForm = new AttackForm(sourceRegion, attackedRegion)
+            {
+                StartPosition = FormStartPosition.CenterParent
+            };
+
+            if (attackForm.ShowDialog(this) != DialogResult.OK)
+                return -1;
+
+            return attackForm.ArmyCount;
         }
     }
 }

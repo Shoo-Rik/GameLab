@@ -7,5 +7,11 @@ namespace Common.Data
     {
         [XmlAttribute("id")]
         public int LandId { get; set; }
+
+        [XmlElement("Army")]
+        public Army Army { get; set; }
+
+        [XmlElement("Reserve")]
+        public Reserve Reserve { get; set; }
     }
 }

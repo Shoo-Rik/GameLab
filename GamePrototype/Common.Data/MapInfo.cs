@@ -5,6 +5,8 @@ namespace Common.Data
     {
         public int OwnColor { get; set; }
 
+        public int Step { get; set; }
+
         public RegionInformation[,] Info { get; set; }
     }
 }
