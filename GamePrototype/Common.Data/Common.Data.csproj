@@ -46,7 +46,6 @@
     <Compile Include="Land.cs" />
     <Compile Include="MapInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Region.cs" />
     <Compile Include="RegionInformation.cs" />
     <Compile Include="Reserve.cs" />
   </ItemGroup>

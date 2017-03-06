@@ -46,17 +46,10 @@ namespace GamePrototype
                 result.OwnColor = map.Color;
                 result.Step = map.Step;
                 result.Info = new RegionInformation[map.Width, map.Length];
-                int width = 0;
-                int height = 0;
 
                 foreach (var info in map.Info)
                 {
-                    result.Info[width++, height] = info;
-                    if (width == map.Width)
-                    {
-                        width = 0;
-                        height++;
-                    }
+                    result.Info[info.Coordinates.X, info.Coordinates.Y] = info;
                 }
             }
 

@@ -20,6 +20,15 @@ namespace GamePrototype
             _model.ModeChangedEvent += OnModeChanged;
         }
 
+        private void MapForm_Load(object sender, EventArgs e)
+        {
+            _model.GetArmyToAttackFunc = GetArmyCountToAttack;
+
+            UpdateListBox(_model.GetRegionInfoStrings());
+
+            EnableActionButtons(true);
+        }
+
         private void OnModeChanged(GameMode mode)
         {
             switch (mode)
@@ -43,6 +52,8 @@ namespace GamePrototype
             btnMoveArmy.Enabled = enable;
             btnSplitArmy.Enabled = enable;
             btnAttackNearRegion.Enabled = enable;
+
+            btnCancel.Enabled = !enable;
         }
 
         private void UpdateListBox(string[] strings)
@@ -56,29 +67,6 @@ namespace GamePrototype
             e.Graphics.DrawImage(_model.GenerateMap(), new Point(0, 0));
         }
 
-        private void MapForm_Load(object sender, EventArgs e)
-        {
-            _model.GetArmyToAttackFunc = GetArmyCountToAttack;
-
-            UpdateListBox(_model.GetRegionInfoStrings());
-        }
-
-        private void saveButton_Click(object sender, EventArgs e)
-        {
-            using (var saveDlg = new SaveFileDialog())
-            {
-                if (saveDlg.ShowDialog() != DialogResult.OK)
-                    return;
-
-                _model.Save(saveDlg.FileName);
-            }
-        }
-
-        private void exitButton_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
         private void ownColorBox_Paint(object sender, PaintEventArgs e)
         {
             Bitmap bmp = new Bitmap(e.ClipRectangle.Width, e.ClipRectangle.Height);
@@ -89,14 +77,30 @@ namespace GamePrototype
 
         private void mapBox_MouseClick(object sender, MouseEventArgs e)
         {
-            _model.ProcessMouseClick(e.Location);
+            _model.OnChooseLocation(e.Location);
             UpdateListBox(_model.GetRegionInfoStrings());
             Refresh();
         }
 
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            using (var saveDlg = new SaveFileDialog())
+            {
+                if (saveDlg.ShowDialog() != DialogResult.OK)
+                    return;
+
+                _model.Save(saveDlg.FileName);
+            }
+        }
+
+        private void btnExit_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
         private void btnAttackNearRegion_Click(object sender, EventArgs e)
         {
-            if (!_model.ProcessAction(GameAction.Attack))
+            if (!_model.InitiateAction(GameAction.Attack))
             {
                 MessageBox.Show(this, "Сначала выберите свой регион.", "Атаковать соседний регион", MessageBoxButtons.OK);
                 return;
@@ -144,7 +148,7 @@ namespace GamePrototype
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            _model.ProcessAction(GameAction.Cancel);
+            _model.InitiateAction(GameAction.Cancel);
 
             Refresh();
         }

@@ -58,7 +58,7 @@
             this.saveButton.TabIndex = 1;
             this.saveButton.Text = "Сохранить";
             this.saveButton.UseVisualStyleBackColor = true;
-            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
+            this.saveButton.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // exitButton
             // 
@@ -69,7 +69,7 @@
             this.exitButton.TabIndex = 2;
             this.exitButton.Text = "Выход";
             this.exitButton.UseVisualStyleBackColor = true;
-            this.exitButton.Click += new System.EventHandler(this.exitButton_Click);
+            this.exitButton.Click += new System.EventHandler(this.btnExit_Click);
             // 
             // mapBox
             // 

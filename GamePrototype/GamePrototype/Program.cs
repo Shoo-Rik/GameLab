@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace GamePrototype
@@ -25,7 +26,7 @@ namespace GamePrototype
                 return;
 
             // [TODO]: Move to config
-            int color = 0xFF0000;
+            int color = Color.Red.ToArgb();
 
             // 2. Get model
 

@@ -5,12 +5,15 @@ namespace Common.Data
     [XmlRoot]
     public class Army
     {
+        [XmlAttribute("id")]
+        public int LandId { get; set; }
+
         [XmlAttribute("count")]
         public int Count { get; set; }
 
         // A6
-        [XmlElement("Region")]
-        public Region CurrentRegion { get; set; }
+        [XmlElement("From")]
+        public Coordinates From { get; set; }
 
         // A11
         [XmlAttribute("lastStep")]

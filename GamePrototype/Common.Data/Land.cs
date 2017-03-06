@@ -6,7 +6,7 @@ namespace Common.Data
     public class Land
     {
         // A1
-        public Region[] Regions { get; set; }
+        public RegionInformation[] Regions { get; set; }
 
         // A3
         public Army[] Armies { get; set; }

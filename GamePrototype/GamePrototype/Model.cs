@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using Microsoft.Win32;
+using System.Linq;
 
 namespace GamePrototype
 {
@@ -16,8 +16,8 @@ namespace GamePrototype
         private static readonly int DefaultReserveCount = 2000;
         private static readonly int ReservePercentVariation = 35;
 
-        private static readonly int SelectedRegionColor = 0xAAAAAA;
-        private static readonly int DisabledRegionColor = 0x555555;
+        private static readonly int SelectedRegionColor = Color.DarkSlateGray.ToArgb();
+        private static readonly int DisabledRegionColor = Color.Gray.ToArgb();
 
         private static int RegionSize = 64;
 
@@ -123,13 +123,13 @@ namespace GamePrototype
             ModeChangedEvent?.Invoke(mode);
         }
 
-        public bool ProcessAction(GameAction action)
+        public bool InitiateAction(GameAction action)
         {
             switch (action)
             {
                 case GameAction.Attack:
-                    RegionInformation? currentRegion = GetSelectedRegion(_selectedLocation);
-                    if (!currentRegion.HasValue || currentRegion.Value.LandId != _mapInfo.OwnColor)
+                    RegionInformation currentRegion = GetSelectedRegion(_selectedLocation);
+                    if (currentRegion == null || currentRegion.LandId != _mapInfo.OwnColor)
                     {
                         return false;
                     }
@@ -143,7 +143,8 @@ namespace GamePrototype
             return true;
         }
 
-        public void ProcessMouseClick(Point mouseClickLocation)
+        // [TODO]: Refactor: Replace Point to RegionInformation coordinates
+        public void OnChooseLocation(Point mouseClickLocation)
         {
             switch (_mode)
             {
@@ -155,22 +156,50 @@ namespace GamePrototype
                     if (!IsRegionAllowedToAttack(mouseClickLocation))
                         break;
 
-                    RegionInformation? currentRegion = GetSelectedRegion(_selectedLocation);
-                    RegionInformation? attackedRegion = GetSelectedRegion(mouseClickLocation);
+                    RegionInformation currentRegion = GetSelectedRegion(_selectedLocation);
+                    RegionInformation attackedRegion = GetSelectedRegion(mouseClickLocation);
 
-                    if (!currentRegion.HasValue || !attackedRegion.HasValue || GetArmyToAttackFunc == null)
+                    if (currentRegion == null || attackedRegion == null || GetArmyToAttackFunc == null)
                         break;
 
-                    int armyCount = GetArmyToAttackFunc(currentRegion.Value, attackedRegion.Value);
-                    if (armyCount <= 0)
-                        break;
-
-                    // [TODO]
-
-                    SetMode(GameMode.Normal);
-
+                    int armyCount = GetArmyToAttackFunc(currentRegion, attackedRegion);
+                    if (armyCount > 0)
+                    {
+                        SetBattleInRegion(_mapInfo.Step, currentRegion, attackedRegion, armyCount);
+                        SetMode(GameMode.Normal);
+                    }
                     break;
             }
+        }
+
+        private static void SetBattleInRegion(int currentStep, RegionInformation fromRegion, RegionInformation toRegion, int armyCount)
+        {
+            if (fromRegion.Army.Count < armyCount)
+                throw new InvalidOperationException("fromRegion.Army.Count < armyCount");
+
+            fromRegion.Army.Count -= armyCount;
+
+            // [TODO]
+            var battle = new Battle
+            {
+                Attacker = new Army
+                {
+                    LandId = fromRegion.LandId,
+                    From = fromRegion.Coordinates,
+                    Count = armyCount
+                },
+                Defender = new Army
+                {
+                    LandId = toRegion.LandId,
+                    From = toRegion.Coordinates
+                },
+                Step = currentStep
+            };
+
+            Battle[] previousBattles = toRegion.Battles;
+            toRegion.Battles = (previousBattles == null) 
+                ? new[] { battle } 
+                : previousBattles.Concat(new[] { battle }).ToArray();
         }
 
         // [TODO]: Using constant 1
@@ -181,18 +210,15 @@ namespace GamePrototype
             int currentWIndex = GetWIndex(_selectedLocation);
             int currentHIndex = GetHIndex(_selectedLocation);
 
-            RegionInformation? attackedRegion = GetSelectedRegion(mouseClickLocation);
+            RegionInformation attackedRegion = GetSelectedRegion(mouseClickLocation);
 
             return ((Math.Abs(attackedWIndex - currentWIndex) <= 1 && Math.Abs(attackedHIndex - currentHIndex) <= 1)
-                && attackedRegion.HasValue && (attackedRegion.Value.LandId != _mapInfo.OwnColor));
+                && attackedRegion != null && (attackedRegion.LandId != _mapInfo.OwnColor));
         }
 
         public static SolidBrush CreateBrush(int colorId)
         {
-            int red = (colorId & 0xFF0000) >> 16;
-            int green = (colorId & 0x00FF00) >> 8;
-            int blue = colorId & 0x0000FF;
-            return new SolidBrush(Color.FromArgb(red, green, blue));
+           return new SolidBrush(Color.FromArgb(colorId));
         }
 
         // === Private methods section ===
@@ -201,9 +227,9 @@ namespace GamePrototype
         {
             var result = new MapInfo { OwnColor = color };
 
-            var info1 = new RegionInformation { LandId = 0xFF0000 };
-            var info2 = new RegionInformation { LandId = 0x00FF00 };
-            var info3 = new RegionInformation { LandId = 0x0000FF };
+            var color1 = Color.Red.ToArgb();
+            var color2 = Color.Green.ToArgb();
+            var color3 = Color.Blue.ToArgb();
 
             const int widthCount = 10;
             const int heightCount = 10;
@@ -216,25 +242,34 @@ namespace GamePrototype
                     switch (Rnd.Next(3))
                     {
                         case 0:
-                            result.Info[wIndex, hIndex] = info1;
+                            result.Info[wIndex, hIndex] = new RegionInformation { LandId = color1 };
                             break;
 
                         case 1:
-                            result.Info[wIndex, hIndex] = info2;
+                            result.Info[wIndex, hIndex] = new RegionInformation { LandId = color2 };
                             break;
 
                         case 2:
-                            result.Info[wIndex, hIndex] = info3;
+                            result.Info[wIndex, hIndex] = new RegionInformation { LandId = color3 };
                             break;
 
                         default: throw new NotSupportedException("Random value");
                     }
 
+                    result.Info[wIndex, hIndex].Coordinates = new Coordinates { X = wIndex, Y = hIndex };
+
                     int armyCount = DefaultArmyCount * (100 - ArmyPercentVariation + Rnd.Next(2 * ArmyPercentVariation)) / 100;
-                    result.Info[wIndex, hIndex].Army = new Army { Count = armyCount };
+                    result.Info[wIndex, hIndex].Army = new Army
+                    {
+                        Count = armyCount,
+                        LandId = result.Info[wIndex, hIndex].LandId
+                    };
 
                     int reserveCount = DefaultReserveCount * (100 - ReservePercentVariation + Rnd.Next(2 * ReservePercentVariation)) / 100;
-                    result.Info[wIndex, hIndex].Reserve = new Reserve { Count = reserveCount };
+                    result.Info[wIndex, hIndex].Reserve = new Reserve
+                    {
+                        Count = reserveCount
+                    };
                 }
             }
             return result;
@@ -250,7 +285,7 @@ namespace GamePrototype
             return location.Y == 0 ? -1 : location.Y / RegionSize;
         }
 
-        private RegionInformation? GetSelectedRegion(Point selectedLocation)
+        private RegionInformation GetSelectedRegion(Point selectedLocation)
         {
             int wSelectedIndex = GetWIndex(selectedLocation);
             if (wSelectedIndex <= 0 || _mapInfo.Info.GetLength(0) <= wSelectedIndex)
