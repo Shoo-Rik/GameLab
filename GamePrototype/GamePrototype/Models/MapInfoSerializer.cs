@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 
-namespace GamePrototype
+namespace GamePrototype.Models
 {
     [XmlRoot]
     public class XmlMapInfo
@@ -59,7 +59,7 @@ namespace GamePrototype
         public static void Serialize(MapInfo mapInfo, string filePath)
         {
             if (mapInfo == null || mapInfo.Info == null)
-                throw new ArgumentNullException("mapInfo");
+                throw new ArgumentNullException(nameof(mapInfo));
 
             var xmlMapInfo = new XmlMapInfo
             {

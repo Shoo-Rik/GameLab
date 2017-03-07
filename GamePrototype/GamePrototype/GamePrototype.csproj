@@ -46,62 +46,49 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AttackForm.cs">
+    <Compile Include="Forms\AttackForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AttackForm.Designer.cs">
+    <Compile Include="Forms\AttackForm.Designer.cs">
       <DependentUpon>AttackForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="MapForm.cs">
+    <Compile Include="Forms\MapForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MapForm.Designer.cs">
+    <Compile Include="Forms\MapForm.Designer.cs">
       <DependentUpon>MapForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="MapInfoSerializer.cs" />
-    <Compile Include="Model.cs" />
+    <Compile Include="Forms\RelocationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RelocationForm.Designer.cs">
+      <DependentUpon>RelocationForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MapInfoSerializer.cs" />
+    <Compile Include="Models\Model.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StartupForm.cs">
+    <Compile Include="Forms\StartupForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="StartupForm.Designer.cs">
+    <Compile Include="Forms\StartupForm.Designer.cs">
       <DependentUpon>StartupForm.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="AttackForm.resx">
+    <EmbeddedResource Include="Forms\AttackForm.resx">
       <DependentUpon>AttackForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MapForm.resx">
+    <EmbeddedResource Include="Forms\MapForm.resx">
       <DependentUpon>MapForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="Forms\RelocationForm.resx">
+      <DependentUpon>RelocationForm.cs</DependentUpon>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <EmbeddedResource Include="StartupForm.resx">
+    <EmbeddedResource Include="Forms\StartupForm.resx">
       <DependentUpon>StartupForm.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\aaa.jpg" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Data\Common.Data.csproj">

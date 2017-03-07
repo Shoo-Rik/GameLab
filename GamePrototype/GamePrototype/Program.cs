@@ -1,17 +1,28 @@
-﻿using System;
+﻿using GamePrototype.Forms;
+using GamePrototype.Models;
+using System;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace GamePrototype
 {
     static class Program
     {
+        // ReSharper disable once NotAccessedField.Local
+        private static Mutex _appMutex;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
+            bool canRun;
+            _appMutex = new Mutex(true, "WorldManagement", out canRun);
+            if (!canRun)
+                return;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 

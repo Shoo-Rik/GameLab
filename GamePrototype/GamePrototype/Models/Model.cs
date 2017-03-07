@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 
-namespace GamePrototype
+namespace GamePrototype.Models
 {
     public sealed class Model
     {
@@ -32,6 +32,7 @@ namespace GamePrototype
         private GameMode _mode = GameMode.Normal;
 
         public Func<RegionInformation, RegionInformation, int> GetArmyToAttackFunc { get; set; }
+        public Func<RegionInformation, RegionInformation, bool> RelocateArmyFunc { get; set; }
 
         public delegate void ModeChanged(GameMode mode);
         public event ModeChanged ModeChangedEvent;
@@ -71,10 +72,21 @@ namespace GamePrototype
                 result.Add(string.Empty);
                 result.Add($"Армия: {info.Army.Count}");
                 result.Add($"Резерв: {info.Reserve.Count}");
+
+                if (info.Battles != null)
+                {
+                    foreach (var battle in info.Battles)
+                    {
+                        result.Add(string.Empty);
+                        result.Add($"Атакован армией '{(battle.Attacker.LandId & 0xFFFFFF):X}' из региона ({battle.Attacker.From.X+1}:{battle.Attacker.From.Y+1})");
+                        result.Add($"Численность: {battle.Attacker.Count}");
+                    }
+                }
             }
             return result.ToArray();
         }
 
+        // [TODO]: Refactor
         public Bitmap GenerateMap()
         {
             int widthCount = _mapInfo.Info.GetLength(0);
@@ -86,21 +98,52 @@ namespace GamePrototype
             Bitmap bmp = new Bitmap(RegionSize * widthCount, RegionSize * heightCount);
             Graphics gr = Graphics.FromImage(bmp);
 
-            for (int widthIndex = 0; widthIndex < widthCount; ++widthIndex)
+            for (int wIndex = 0; wIndex < widthCount; ++wIndex)
             {
-                for (int heightIndex = 0; heightIndex < heightCount; ++heightIndex)
+                for (int hIndex = 0; hIndex < heightCount; ++hIndex)
                 {
-                    int colorId = _mapInfo.Info[widthIndex, heightIndex].LandId;
-                    if (wSelectedIndex == widthIndex && hSelectedIndex == heightIndex)
+                    bool hasBattle = false;
+                    int colorId;
+                    if (wSelectedIndex == wIndex && hSelectedIndex == hIndex)
                     {
                         colorId = SelectedRegionColor;
                     }
+                    else if (!((_mode == GameMode.Normal) ||
+                               (_mode == GameMode.Attack || _mode == GameMode.Relocation) && (Math.Abs(hIndex - hSelectedIndex) <= 1) &&
+                               (Math.Abs(wIndex - wSelectedIndex) <= 1)))
+                    {
+                        colorId = DisabledRegionColor;
+                    }
+                    else
+                    {
+                        colorId = _mapInfo.Info[wIndex, hIndex].LandId;
+                        hasBattle = _mapInfo.Info[wIndex, hIndex].Battles != null &&
+                                    _mapInfo.Info[wIndex, hIndex].Battles.Length > 0;
+                    }
 
-                    bool hasNormalColor = (_mode == GameMode.Normal) || (_mode == GameMode.Attack) &&
-                        (Math.Abs(heightIndex - hSelectedIndex) <= 1) && (Math.Abs(widthIndex - wSelectedIndex) <= 1);
+                    const int shift = 4;
+                    int count = 0;
 
-                    gr.FillRectangle(CreateBrush(hasNormalColor ? colorId : DisabledRegionColor),
-                        new Rectangle(widthIndex * RegionSize, heightIndex * RegionSize - 1, RegionSize - 1, RegionSize - 1));
+                    if (hasBattle)
+                    {
+                        foreach (var battle in _mapInfo.Info[wIndex, hIndex].Battles)
+                        {
+                            gr.FillRectangle(CreateBrush(battle.Attacker.LandId),
+                                new Rectangle(
+                                    wIndex*RegionSize + count*shift,
+                                    hIndex*RegionSize + count*shift,
+                                    RegionSize - 1 - 2*count*shift,
+                                    RegionSize - 1 - 2*count*shift));
+                            ++count;
+                        }
+                    }
+
+                    gr.FillRectangle(CreateBrush(colorId),
+                        new Rectangle(
+                            wIndex*RegionSize + count*shift,
+                            hIndex*RegionSize + count*shift,
+                            RegionSize - 1 - 2*count*shift,
+                            RegionSize - 1 - 2*count*shift));
                 }
             }
             return bmp;
@@ -125,15 +168,25 @@ namespace GamePrototype
 
         public bool InitiateAction(GameAction action)
         {
+            RegionInformation currentRegion;
             switch (action)
             {
                 case GameAction.Attack:
-                    RegionInformation currentRegion = GetSelectedRegion(_selectedLocation);
+                    currentRegion = GetSelectedRegion(_selectedLocation);
                     if (currentRegion == null || currentRegion.LandId != _mapInfo.OwnColor)
                     {
                         return false;
                     }
                     SetMode(GameMode.Attack);
+                    break;
+
+                case GameAction.Relocation:
+                    currentRegion = GetSelectedRegion(_selectedLocation);
+                    if (currentRegion == null || currentRegion.LandId != _mapInfo.OwnColor)
+                    {
+                        return false;
+                    }
+                    SetMode(GameMode.Relocation);
                     break;
 
                 case GameAction.Cancel:
@@ -149,10 +202,12 @@ namespace GamePrototype
             switch (_mode)
             {
                 case GameMode.Normal:
+                {
                     _selectedLocation = mouseClickLocation;
                     break;
-
+                }
                 case GameMode.Attack:
+                {
                     if (!IsRegionAllowedToAttack(mouseClickLocation))
                         break;
 
@@ -169,6 +224,24 @@ namespace GamePrototype
                         SetMode(GameMode.Normal);
                     }
                     break;
+                }
+                case GameMode.Relocation:
+                {
+                    if (!IsRegionAllowedToRelocation(mouseClickLocation))
+                        break;
+
+                    RegionInformation currentRegion = GetSelectedRegion(_selectedLocation);
+                    RegionInformation newRegion = GetSelectedRegion(mouseClickLocation);
+
+                    if (currentRegion == null || newRegion == null || RelocateArmyFunc == null)
+                        break;
+
+                    if (RelocateArmyFunc(currentRegion, newRegion))
+                    {
+                        SetMode(GameMode.Normal);
+                    }
+                    break;
+                }
             }
         }
 
@@ -214,6 +287,20 @@ namespace GamePrototype
 
             return ((Math.Abs(attackedWIndex - currentWIndex) <= 1 && Math.Abs(attackedHIndex - currentHIndex) <= 1)
                 && attackedRegion != null && (attackedRegion.LandId != _mapInfo.OwnColor));
+        }
+
+        // [TODO]: Using constant 1
+        public bool IsRegionAllowedToRelocation(Point mouseClickLocation)
+        {
+            int newWIndex = GetWIndex(mouseClickLocation);
+            int newHIndex = GetHIndex(mouseClickLocation);
+            int currentWIndex = GetWIndex(_selectedLocation);
+            int currentHIndex = GetHIndex(_selectedLocation);
+
+            RegionInformation newRegion = GetSelectedRegion(mouseClickLocation);
+
+            return ((Math.Abs(newWIndex - currentWIndex) <= 1 && Math.Abs(newHIndex - currentHIndex) <= 1)
+                && newRegion != null && (newRegion.LandId == _mapInfo.OwnColor));
         }
 
         public static SolidBrush CreateBrush(int colorId)

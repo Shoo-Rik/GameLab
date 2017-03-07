@@ -1,13 +1,13 @@
 ﻿using System;
-using Common.Data;
 using System.Windows.Forms;
+using Common.Data;
 
-namespace GamePrototype
+namespace GamePrototype.Forms
 {
     public partial class AttackForm : Form
     {
-        private RegionInformation _sourceRegion;
-        private RegionInformation _attackedRegion;
+        private readonly RegionInformation _sourceRegion;
+        private readonly RegionInformation _attackedRegion;
 
         public int ArmyCount
         {
@@ -22,7 +22,7 @@ namespace GamePrototype
             _attackedRegion = attackedRegion;
         }
 
-        private void AttackForm_Load(object sender, System.EventArgs e)
+        private void AttackForm_Load(object sender, EventArgs e)
         {
             armyCountBox.Text = $"{_sourceRegion.Army.Count}";
             enemyArmyCountBox.Text = $"{_attackedRegion.Army.Count}";

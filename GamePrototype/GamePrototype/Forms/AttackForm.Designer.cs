@@ -1,4 +1,4 @@
-﻿namespace GamePrototype
+﻿namespace GamePrototype.Forms
 {
     partial class AttackForm
     {

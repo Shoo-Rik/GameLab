@@ -1,9 +1,10 @@
 ﻿using Common.Data;
+using GamePrototype.Models;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace GamePrototype
+namespace GamePrototype.Forms
 {
     public partial class MapForm : Form
     {
@@ -23,6 +24,7 @@ namespace GamePrototype
         private void MapForm_Load(object sender, EventArgs e)
         {
             _model.GetArmyToAttackFunc = GetArmyCountToAttack;
+            _model.RelocateArmyFunc = RelocateArmy;
 
             UpdateListBox(_model.GetRegionInfoStrings());
 
@@ -34,6 +36,7 @@ namespace GamePrototype
             switch (mode)
             {
                 case GameMode.Attack:
+                case GameMode.Relocation:
                     EnableActionButtons(false);
                     break;
 
@@ -98,7 +101,7 @@ namespace GamePrototype
             Close();
         }
 
-        private void btnAttackNearRegion_Click(object sender, EventArgs e)
+        private void btnAttack_Click(object sender, EventArgs e)
         {
             if (!_model.InitiateAction(GameAction.Attack))
             {
@@ -118,7 +121,15 @@ namespace GamePrototype
 
         private void btnMoveArmy_Click(object sender, EventArgs e)
         {
-            // TODO
+            if (!_model.InitiateAction(GameAction.Relocation))
+            {
+                MessageBox.Show(this, "Сначала выберите свой регион.", "Переместить армию в соседний регион", MessageBoxButtons.OK);
+                return;
+            }
+
+            Refresh();
+
+            MessageBox.Show("Выберите регион для перемещения армии.", "Атака", MessageBoxButtons.OK);
         }
 
         private void btnJoinArmies_Click(object sender, EventArgs e)
@@ -164,6 +175,23 @@ namespace GamePrototype
                 return -1;
 
             return attackForm.ArmyCount;
+        }
+
+        private bool RelocateArmy(RegionInformation fromRegion, RegionInformation toRegion)
+        {
+            var relocationForm = new RelocationForm(fromRegion.Army.Count, toRegion.Army.Count)
+            {
+                StartPosition = FormStartPosition.CenterParent
+            };
+
+            if (relocationForm.ShowDialog(this) == DialogResult.OK)
+            {
+                fromRegion.Army.Count = relocationForm.FromCount;
+                toRegion.Army.Count = relocationForm.ToCount;
+                return true;
+            }
+
+            return false;
         }
     }
 }

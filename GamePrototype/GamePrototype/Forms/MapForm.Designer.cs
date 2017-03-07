@@ -1,4 +1,4 @@
-﻿namespace GamePrototype
+﻿namespace GamePrototype.Forms
 {
     partial class MapForm
     {
@@ -153,6 +153,7 @@
             this.btnGetReserve.TabIndex = 1;
             this.btnGetReserve.Text = "Пополнить армию из резерва";
             this.btnGetReserve.UseVisualStyleBackColor = true;
+            this.btnGetReserve.Visible = false;
             this.btnGetReserve.Click += new System.EventHandler(this.btnGetReserve_Click);
             // 
             // btnSplitArmy
@@ -163,6 +164,7 @@
             this.btnSplitArmy.TabIndex = 1;
             this.btnSplitArmy.Text = "Разделить армию";
             this.btnSplitArmy.UseVisualStyleBackColor = true;
+            this.btnSplitArmy.Visible = false;
             this.btnSplitArmy.Click += new System.EventHandler(this.btnSplitArmy_Click);
             // 
             // btnJoinArmies
@@ -173,6 +175,7 @@
             this.btnJoinArmies.TabIndex = 1;
             this.btnJoinArmies.Text = "Объединить армии";
             this.btnJoinArmies.UseVisualStyleBackColor = true;
+            this.btnJoinArmies.Visible = false;
             this.btnJoinArmies.Click += new System.EventHandler(this.btnJoinArmies_Click);
             // 
             // btnMoveArmy
@@ -193,6 +196,7 @@
             this.btnDefendRegion.TabIndex = 1;
             this.btnDefendRegion.Text = "Защитить регион";
             this.btnDefendRegion.UseVisualStyleBackColor = true;
+            this.btnDefendRegion.Visible = false;
             this.btnDefendRegion.Click += new System.EventHandler(this.btnDefendRegion_Click);
             // 
             // btnAttackNearRegion
@@ -203,7 +207,7 @@
             this.btnAttackNearRegion.TabIndex = 1;
             this.btnAttackNearRegion.Text = "Атаковать соседний регион";
             this.btnAttackNearRegion.UseVisualStyleBackColor = true;
-            this.btnAttackNearRegion.Click += new System.EventHandler(this.btnAttackNearRegion_Click);
+            this.btnAttackNearRegion.Click += new System.EventHandler(this.btnAttack_Click);
             // 
             // MapForm
             // 
