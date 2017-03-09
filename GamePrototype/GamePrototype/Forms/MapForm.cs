@@ -129,7 +129,7 @@ namespace GamePrototype.Forms
 
             Refresh();
 
-            MessageBox.Show("Выберите регион для перемещения армии.", "Атака", MessageBoxButtons.OK);
+            MessageBox.Show("Выберите свой регион для перемещения армии.", "Перемещение армии", MessageBoxButtons.OK);
         }
 
         private void btnJoinArmies_Click(object sender, EventArgs e)

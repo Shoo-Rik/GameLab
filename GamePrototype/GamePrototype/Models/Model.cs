@@ -297,6 +297,10 @@ namespace GamePrototype.Models
             int currentWIndex = GetWIndex(_selectedLocation);
             int currentHIndex = GetHIndex(_selectedLocation);
 
+            // Skip the same region
+            if (newWIndex == currentWIndex && newHIndex == currentHIndex)
+                return false;
+
             RegionInformation newRegion = GetSelectedRegion(mouseClickLocation);
 
             return ((Math.Abs(newWIndex - currentWIndex) <= 1 && Math.Abs(newHIndex - currentHIndex) <= 1)
