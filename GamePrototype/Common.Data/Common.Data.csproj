@@ -38,6 +38,8 @@
     <Content Include="Documents\Description.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BattleHistory.cs" />
+    <Compile Include="BattleResult.cs" />
     <Compile Include="GameAction.cs" />
     <Compile Include="Army.cs" />
     <Compile Include="Battle.cs" />

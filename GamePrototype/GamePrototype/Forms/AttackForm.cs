@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Common.Data;
+using GamePrototype.Models;
+using System;
 using System.Windows.Forms;
-using Common.Data;
 
 namespace GamePrototype.Forms
 {
@@ -8,32 +9,39 @@ namespace GamePrototype.Forms
     {
         private readonly RegionInformation _sourceRegion;
         private readonly RegionInformation _attackedRegion;
+        private readonly int _currentStep;
 
         public int ArmyCount
         {
             get { return (int)armyCountBox.Value; }
         }
 
-        public AttackForm(RegionInformation sourceRegion, RegionInformation attackedRegion)
+        public AttackForm(int currentStep, RegionInformation sourceRegion, RegionInformation attackedRegion)
         {
             InitializeComponent();
 
+            _currentStep = currentStep;
             _sourceRegion = sourceRegion;
             _attackedRegion = attackedRegion;
         }
 
         private void AttackForm_Load(object sender, EventArgs e)
         {
+            Battle battle = BattleProcessor.GetCurrentBattle(_attackedRegion, _sourceRegion.LandId, _sourceRegion.Coordinates, _currentStep);
+            int currentArmyCount = battle?.Attacker.Count ?? 0;
+
+            int sourceArmyCount = _sourceRegion.Army.Count + currentArmyCount;
+
             trackBar1.Minimum = 0;
-            trackBar1.Maximum = _sourceRegion.Army.Count;
+            trackBar1.Maximum = sourceArmyCount;
 
             armyCountBox.Minimum = 0;
-            armyCountBox.Maximum = _sourceRegion.Army.Count;
+            armyCountBox.Maximum = sourceArmyCount;
 
             // === Initialize ===
 
-            trackBar1.Value = _sourceRegion.Army.Count;
-            armyCountBox.Value = _sourceRegion.Army.Count;
+            trackBar1.Value = sourceArmyCount;
+            armyCountBox.Value = sourceArmyCount;
 
             enemyArmyCountBox.Text = $"{_attackedRegion.Army.Count}";
             enemyReserveCountBox.Text = $"{_attackedRegion.Reserve.Count}";

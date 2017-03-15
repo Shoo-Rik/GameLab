@@ -1,30 +1,12 @@
 ﻿using Common.Data;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 
-namespace GamePrototype.Models
+namespace GamePrototype.Data
 {
-    [XmlRoot]
-    public class XmlMapInfo
-    {
-        [XmlAttribute]
-        public int Width { get; set; }
-
-        [XmlAttribute]
-        public int Length { get; set; }
-
-        [XmlAttribute]
-        public int Color { get; set; }
-
-        [XmlAttribute]
-        public int Step { get; set; }
-
-        [XmlElement("Info")]
-        public RegionInformation[] Info { get; set; }
-    }
-
     public static class MapInfoSerializer
     {
         private static readonly XmlSerializer Serializer = new XmlSerializer(typeof(XmlMapInfo));
@@ -45,6 +27,10 @@ namespace GamePrototype.Models
 
                 result.OwnColor = map.Color;
                 result.Step = map.Step;
+                if (map.Battles != null)
+                {
+                    result.BattleHistory = new List<Battle>(map.Battles);
+                }
                 result.Info = new RegionInformation[map.Width, map.Length];
 
                 foreach (var info in map.Info)
@@ -67,6 +53,7 @@ namespace GamePrototype.Models
                 Length = mapInfo.Info.GetLength(1),
                 Color = mapInfo.OwnColor,
                 Step = mapInfo.Step,
+                Battles = mapInfo.BattleHistory.ToArray(),
                 Info = mapInfo.Info.Cast<RegionInformation>().ToArray()
             };
 

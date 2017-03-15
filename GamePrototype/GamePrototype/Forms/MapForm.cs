@@ -74,7 +74,7 @@ namespace GamePrototype.Forms
         {
             Bitmap bmp = new Bitmap(e.ClipRectangle.Width, e.ClipRectangle.Height);
             Graphics gr = Graphics.FromImage(bmp);
-            gr.FillRectangle(Model.CreateBrush(_model.GetOwnColor()), e.ClipRectangle);
+            gr.FillRectangle(MapProcessor.CreateBrush(_model.GetOwnColor()), e.ClipRectangle);
             e.Graphics.DrawImage(bmp, new Point(0, 0));
         }
 
@@ -105,13 +105,13 @@ namespace GamePrototype.Forms
         {
             if (!_model.InitiateAction(GameAction.Attack))
             {
-                MessageBox.Show(this, "Сначала выберите свой регион.", "Атаковать соседний регион", MessageBoxButtons.OK);
+                MessageBox.Show(this, "Сначала выберите свой регион.", "Атаковать соседний регион", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             Refresh();
 
-            MessageBox.Show("Выберите регион для атаки.", "Атака", MessageBoxButtons.OK);
+            MessageBox.Show("Выберите регион для атаки.", "Атака", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void btnDefendRegion_Click(object sender, EventArgs e)
@@ -123,13 +123,13 @@ namespace GamePrototype.Forms
         {
             if (!_model.InitiateAction(GameAction.Relocation))
             {
-                MessageBox.Show(this, "Сначала выберите свой регион.", "Переместить армию в соседний регион", MessageBoxButtons.OK);
+                MessageBox.Show(this, "Сначала выберите свой регион.", "Переместить армию в соседний регион", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             Refresh();
 
-            MessageBox.Show("Выберите свой регион для перемещения армии.", "Перемещение армии", MessageBoxButtons.OK);
+            MessageBox.Show("Выберите свой регион для перемещения армии.", "Перемещение армии", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void btnJoinArmies_Click(object sender, EventArgs e)
@@ -152,9 +152,13 @@ namespace GamePrototype.Forms
             if (MessageBox.Show(this, "Вы уверены?", "Сделать ход", MessageBoxButtons.YesNo) == DialogResult.No)
                 return;
 
+            _model.ProcessCurrentBattles();
+
             _model.IncrementStep();
 
             UpdateListBox(_model.GetRegionInfoStrings());
+
+            Refresh();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -166,7 +170,7 @@ namespace GamePrototype.Forms
 
         private int GetArmyCountToAttack(RegionInformation sourceRegion, RegionInformation attackedRegion)
         {
-            var attackForm = new AttackForm(sourceRegion, attackedRegion)
+            var attackForm = new AttackForm(_model.Step, sourceRegion, attackedRegion)
             {
                 StartPosition = FormStartPosition.CenterParent
             };

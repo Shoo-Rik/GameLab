@@ -180,7 +180,7 @@
             // 
             // btnMoveArmy
             // 
-            this.btnMoveArmy.Location = new System.Drawing.Point(22, 83);
+            this.btnMoveArmy.Location = new System.Drawing.Point(22, 54);
             this.btnMoveArmy.Name = "btnMoveArmy";
             this.btnMoveArmy.Size = new System.Drawing.Size(178, 23);
             this.btnMoveArmy.TabIndex = 1;
@@ -190,7 +190,7 @@
             // 
             // btnDefendRegion
             // 
-            this.btnDefendRegion.Location = new System.Drawing.Point(22, 54);
+            this.btnDefendRegion.Location = new System.Drawing.Point(22, 83);
             this.btnDefendRegion.Name = "btnDefendRegion";
             this.btnDefendRegion.Size = new System.Drawing.Size(178, 23);
             this.btnDefendRegion.TabIndex = 1;

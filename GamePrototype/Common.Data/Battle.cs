@@ -8,13 +8,28 @@ namespace Common.Data
         [XmlAttribute("step")]
         public int Step { get; set; }
 
+        [XmlAttribute("result")]
+        public BattleResult Result { get; set; }
+
+        [XmlIgnore]
+        public Coordinates From => Defender?.From;
+
+        [XmlAttribute("a_dmg")]
+        public int AttackerDamage { get; set; }
+
+        [XmlAttribute("d_dmg")]
+        public int DefenderDamage { get; set; }
+
         // A4
-        [XmlElement]
+        [XmlElement("A")]
         public Army Attacker { get; set; }
 
         // A4
-        [XmlElement]
+        [XmlElement("D")]
         public Army Defender { get; set; }
+
+        [XmlElement("R")]
+        public Reserve DefenderReserve { get; set; }
 
         /*
         // A5

@@ -64,8 +64,11 @@
     <Compile Include="Forms\RelocationForm.Designer.cs">
       <DependentUpon>RelocationForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Models\MapInfoSerializer.cs" />
+    <Compile Include="Models\BattleProcessor.cs" />
+    <Compile Include="Data\MapInfoSerializer.cs" />
+    <Compile Include="Models\MapProcessor.cs" />
     <Compile Include="Models\Model.cs" />
+    <Compile Include="Data\XmlMapInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Forms\StartupForm.cs">
