@@ -1,7 +1,9 @@
 ﻿using Common.Data;
 using GamePrototype.Models;
 using System;
+using System.Collections;
 using System.Drawing;
+using System.Text;
 using System.Windows.Forms;
 
 namespace GamePrototype.Forms
@@ -196,6 +198,22 @@ namespace GamePrototype.Forms
             }
 
             return false;
+        }
+
+        private void btnCopyText_Click(object sender, EventArgs e)
+        {
+            ICollection items = listBox1.SelectedItems;
+            if (items.Count == 0)
+            {
+                items = listBox1.Items;
+            }
+
+            var builder = new StringBuilder();
+            foreach (var item in items)
+            {
+                builder.AppendLine(item as string);
+            }
+            Clipboard.SetText(builder.ToString());
         }
     }
 }

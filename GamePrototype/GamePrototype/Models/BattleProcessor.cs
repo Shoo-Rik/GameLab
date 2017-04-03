@@ -1,6 +1,7 @@
 ﻿using Common.Data;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -68,7 +69,7 @@ namespace GamePrototype.Models
             }
         }
 
-        public static Battle GetCurrentBattle(RegionInformation defenderRegion, int attackerId, Coordinates attackerCoordinates, int currentStep)
+        public static Battle GetCurrentBattle(RegionInformation defenderRegion, int attackerId, Point attackerCoordinates, int currentStep)
         {
             Battle result = null;
 
@@ -129,6 +130,9 @@ namespace GamePrototype.Models
             battle.Attacker.Count = newAttackerCount;
             battle.Defender.Count = newDefenderCount*battle.Defender.Count/defenderCount; // [TODO]: Proprtion must be changed?
             battle.DefenderReserve.Count = newDefenderCount - battle.Defender.Count;
+
+            battle.AttackerDamage = attackerCount - newAttackerCount;
+            battle.DefenderDamage = defenderCount - newDefenderCount;
         }
     }
 }

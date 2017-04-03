@@ -58,7 +58,7 @@ namespace GamePrototype.Models
                             throw new NotSupportedException("Random value");
                     }
 
-                    result.Info[wIndex, hIndex].Coordinates = new Coordinates { X = wIndex, Y = hIndex };
+                    result.Info[wIndex, hIndex].Coordinates = new Point(wIndex, hIndex);
 
                     int armyCount = DefaultArmyCount * (100 - ArmyPercentVariation + Rnd.Next(2 * ArmyPercentVariation)) / 100;
                     result.Info[wIndex, hIndex].Army = new Army
@@ -78,7 +78,7 @@ namespace GamePrototype.Models
         }
 
         // [TODO]: Refactor
-        public static Bitmap GenerateMap(MapInfo mapInfo, Point selectedLocation, GameMode mode)
+        public static Bitmap GenerateMap(this MapInfo mapInfo, Point selectedLocation, GameMode mode)
         {
             int widthCount = mapInfo.Info.GetLength(0);
             int heightCount = mapInfo.Info.GetLength(1);
@@ -99,9 +99,7 @@ namespace GamePrototype.Models
                     {
                         colorId = SelectedRegionColor;
                     }
-                    else if (!((mode == GameMode.Normal) ||
-                               (mode == GameMode.Attack || mode == GameMode.Relocation) && (Math.Abs(hIndex - hSelectedIndex) <= 1) &&
-                               (Math.Abs(wIndex - wSelectedIndex) <= 1)))
+                    else if (!mapInfo.Info.IsRegionFromTargetArea(mode, new Point(wSelectedIndex, hSelectedIndex), new Point(wIndex, hIndex)))
                     {
                         colorId = DisabledRegionColor;
                     }
@@ -155,12 +153,12 @@ namespace GamePrototype.Models
             return new SolidBrush(Color.FromArgb(colorId));
         }
 
-        public static RegionInformation[] GetNearOwnRegions(MapInfo mapInfo, Coordinates coordinates, int landId)
+        public static RegionInformation[] GetNearOwnRegions(this RegionInformation[,] info, Point coordinates, int landId)
         {
             var result = new List<RegionInformation>();
 
-            int wMaxIndex = mapInfo.Info.GetLength(0);
-            int hMaxIndex = mapInfo.Info.GetLength(1);
+            int wMaxIndex = info.GetLength(0);
+            int hMaxIndex = info.GetLength(1);
 
             for (int distance = 1; distance < Math.Max(wMaxIndex, hMaxIndex); ++distance)
             {
@@ -177,7 +175,7 @@ namespace GamePrototype.Models
                     hIndex = coordinates.Y + y;
                     if (hIndex >= 0 && hIndex < hMaxIndex)
                     {
-                        result.TryAddRegion(mapInfo, landId, wIndex, hIndex);
+                        result.TryAddRegion(info, landId, wIndex, hIndex);
                     }
                 }
 
@@ -190,7 +188,7 @@ namespace GamePrototype.Models
                     hIndex = coordinates.Y + y;
                     if (hIndex >= 0 && hIndex < hMaxIndex)
                     {
-                        result.TryAddRegion(mapInfo, landId, wIndex, hIndex);
+                        result.TryAddRegion(info, landId, wIndex, hIndex);
                     }
                 }
 
@@ -203,7 +201,7 @@ namespace GamePrototype.Models
                     wIndex = coordinates.X + x;
                     if (wIndex >= 0 && wIndex < wMaxIndex)
                     {
-                        result.TryAddRegion(mapInfo, landId, wIndex, hIndex);
+                        result.TryAddRegion(info, landId, wIndex, hIndex);
                     }
                 }
 
@@ -216,7 +214,7 @@ namespace GamePrototype.Models
                     wIndex = coordinates.X + x;
                     if (wIndex >= 0 || wIndex < wMaxIndex)
                     {
-                        result.TryAddRegion(mapInfo, landId, wIndex, hIndex);
+                        result.TryAddRegion(info, landId, wIndex, hIndex);
                     }
                 }
             }
@@ -224,13 +222,107 @@ namespace GamePrototype.Models
             return result.ToArray();
         }
 
-        private static void TryAddRegion(this ICollection<RegionInformation> result, MapInfo mapInfo, int targetLandId, int wIndex, int hIndex)
+        // [TODO]: Using constant 1
+        public static bool IsRegionAllowedToAttack(this RegionInformation[,] info, Point mouseClickLocation, Point selectedLocation, int ownColor)
         {
-            RegionInformation info = mapInfo.Info[wIndex, hIndex];
-            if (info.LandId == targetLandId)
+            int attackedWIndex = GetWIndex(mouseClickLocation);
+            int attackedHIndex = GetHIndex(mouseClickLocation);
+            int currentWIndex = GetWIndex(selectedLocation);
+            int currentHIndex = GetHIndex(selectedLocation);
+
+            RegionInformation attackedRegion = info.GetSelectedRegion(mouseClickLocation);
+
+            return ((Math.Abs(attackedWIndex - currentWIndex) <= 1 && Math.Abs(attackedHIndex - currentHIndex) <= 1)
+                && attackedRegion != null && (attackedRegion.LandId != ownColor));
+        }
+
+        public static bool IsRegionAllowedToRelocation(this RegionInformation[,] info, Point mouseClickLocation, Point selectedLocation)
+        {
+            int wSelectedIndex = GetWIndex(selectedLocation);
+            int hSelectedIndex = GetHIndex(selectedLocation);
+            int wClickedIndex = GetWIndex(mouseClickLocation);
+            int hClickedIndex = GetHIndex(mouseClickLocation);
+
+            return info.IsRegionFromTargetArea(GameMode.Relocation, new Point(wSelectedIndex, hSelectedIndex), new Point(wClickedIndex, hClickedIndex));
+        }
+
+        public static RegionInformation GetSelectedRegion(this RegionInformation[,] info, Point selectedLocation)
+        {
+            int wSelectedIndex = GetWIndex(selectedLocation);
+            if (wSelectedIndex < 0 || info.GetLength(0) <= wSelectedIndex)
+                return null;
+
+            int hSelectedIndex = GetHIndex(selectedLocation);
+            if (hSelectedIndex < 0 || info.GetLength(1) <= hSelectedIndex)
+                return null;
+
+            return info[wSelectedIndex, hSelectedIndex];
+        }
+
+        // === Private methods section ===
+
+        private static void TryAddRegion(this ICollection<RegionInformation> result, RegionInformation[,] info, int targetLandId, int wIndex, int hIndex)
+        {
+            RegionInformation i = info[wIndex, hIndex];
+            if (i.LandId == targetLandId)
             {
-                result.Add(info);
+                result.Add(i);
             }
+        }
+
+        private static bool IsRegionFromTargetArea(this RegionInformation[,] info, GameMode mode, Point targetCoordinates, Point coordinatesToCheck)
+        {
+            switch (mode)
+            {
+                case GameMode.Normal:
+                {
+                    return true;
+                }
+                case GameMode.Attack:
+                {
+                    return (Math.Abs(targetCoordinates.X - coordinatesToCheck.X) <= 1) &&
+                           (Math.Abs(targetCoordinates.Y - coordinatesToCheck.Y) <= 1);
+                }
+                case GameMode.Relocation:
+                {
+                    int targetLandId = info[targetCoordinates.X, targetCoordinates.Y].LandId;
+                    var usedList = new List<Point> {targetCoordinates};
+                    for (int i = 0; i < usedList.Count; ++i)
+                    {
+                        int currentWIndex = usedList[i].X;
+                        int currentHIndex = usedList[i].Y;
+
+                        for (int wShift = -1; wShift <= 1; ++wShift)
+                        {
+                            for (int hShift = -1; hShift <= 1; ++hShift)
+                            {
+                                if (wShift == 0 && hShift == 0)
+                                    continue;
+
+                                if (info.GetLength(0) <= currentWIndex + wShift ||
+                                    currentWIndex + wShift < 0 ||
+                                    info.GetLength(1) <= currentHIndex + hShift ||
+                                    currentHIndex + hShift < 0)
+                                {
+                                    continue;
+                                }
+
+                                var currentCoordinates = new Point(currentWIndex + wShift, currentHIndex + hShift);
+
+                                if (targetLandId == info[currentCoordinates.X, currentCoordinates.Y].LandId &&
+                                    !usedList.Contains(currentCoordinates))
+                                {
+                                    if (coordinatesToCheck.Equals(currentCoordinates))
+                                        return true;
+                                    usedList.Add(currentCoordinates);
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                }
+            }
+            return false;
         }
     }
 }

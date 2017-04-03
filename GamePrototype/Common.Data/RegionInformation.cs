@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Drawing;
+using System.Xml.Serialization;
 
 namespace Common.Data
 {
@@ -9,7 +10,7 @@ namespace Common.Data
         public int LandId { get; set; }
 
         [XmlElement("CO")]
-        public Coordinates Coordinates { get; set; }
+        public Point Coordinates { get; set; }
 
         [XmlElement("Army")]
         public Army Army { get; set; }

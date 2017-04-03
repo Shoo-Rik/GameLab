@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Drawing;
+using System.Xml.Serialization;
 
 namespace Common.Data
 {
@@ -12,7 +13,10 @@ namespace Common.Data
         public BattleResult Result { get; set; }
 
         [XmlIgnore]
-        public Coordinates From => Defender?.From;
+        public Point From
+        {
+            get { return (Defender != null) ? Defender.From : new Point(); }
+        }
 
         [XmlAttribute("a_dmg")]
         public int AttackerDamage { get; set; }

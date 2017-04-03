@@ -76,16 +76,23 @@ namespace GamePrototype.Models
 
                 result.Add(string.Empty);
                 result.Add("=== История сражений ===");
-                foreach (Battle battle in _mapInfo.BattleHistory.Where(b => (b.From.X == wSelectedIndex) && (b.From.Y == hSelectedIndex)))
+                for (int i = _mapInfo.BattleHistory.Count - 1; i >= 0; --i)
                 {
+                    Battle battle = _mapInfo.BattleHistory[i];
+                    if ((battle.From.X != wSelectedIndex) || (battle.From.Y != hSelectedIndex) || (battle.Step >= _mapInfo.Step))
+                    {
+                        continue;
+                    }
+                    string attackerResultString = battle.Result == BattleResult.AttackerWon ? "победила" : "проиграла";
+                    string defenderResultString = battle.Result != BattleResult.AttackerWon ? "победила" : "проиграла";
                     result.Add(string.Empty);
                     result.Add($"ХОД {battle.Step}");
                     result.Add(string.Empty);
-                    result.Add($"Атакующая армия '{(battle.Attacker.LandId & 0xFFFFFF):X}' из региона ({battle.Attacker.From.X + 1}:{battle.Attacker.From.Y + 1})");
+                    result.Add($"Атакующая армия '{(battle.Attacker.LandId & 0xFFFFFF):X}' из региона ({battle.Attacker.From.X + 1}:{battle.Attacker.From.Y + 1}) {attackerResultString}");
                     result.Add($"Понесённый урон: {battle.AttackerDamage}");
                     result.Add($"Остаток армии: {battle.Attacker.Count}");
                     result.Add(string.Empty);
-                    result.Add($"Защищающая армия '{(battle.Defender.LandId & 0xFFFFFF):X}'");
+                    result.Add($"Защищающая армия '{(battle.Defender.LandId & 0xFFFFFF):X}' {defenderResultString}");
                     result.Add($"Понесённый урон: {battle.DefenderDamage}");
                     result.Add($"Остаток армии: {battle.Defender.Count}");
                     result.Add($"Остаток резерва: {battle.DefenderReserve.Count}");
@@ -118,7 +125,7 @@ namespace GamePrototype.Models
             switch (action)
             {
                 case GameAction.Attack:
-                    currentRegion = GetSelectedRegion(_selectedLocation);
+                    currentRegion = _mapInfo.Info.GetSelectedRegion(_selectedLocation);
                     if (currentRegion == null || currentRegion.LandId != _mapInfo.OwnColor)
                     {
                         return false;
@@ -127,7 +134,7 @@ namespace GamePrototype.Models
                     break;
 
                 case GameAction.Relocation:
-                    currentRegion = GetSelectedRegion(_selectedLocation);
+                    currentRegion = _mapInfo.Info.GetSelectedRegion(_selectedLocation);
                     if (currentRegion == null || currentRegion.LandId != _mapInfo.OwnColor)
                     {
                         return false;
@@ -157,8 +164,8 @@ namespace GamePrototype.Models
                     if (!IsRegionAllowedToAttack(mouseClickLocation))
                         break;
 
-                    RegionInformation currentRegion = GetSelectedRegion(_selectedLocation);
-                    RegionInformation attackedRegion = GetSelectedRegion(mouseClickLocation);
+                    RegionInformation currentRegion = _mapInfo.Info.GetSelectedRegion(_selectedLocation);
+                    RegionInformation attackedRegion = _mapInfo.Info.GetSelectedRegion(mouseClickLocation);
 
                     if (currentRegion == null || attackedRegion == null || GetArmyToAttackFunc == null)
                         break;
@@ -176,8 +183,8 @@ namespace GamePrototype.Models
                     if (!IsRegionAllowedToRelocation(mouseClickLocation))
                         break;
 
-                    RegionInformation currentRegion = GetSelectedRegion(_selectedLocation);
-                    RegionInformation newRegion = GetSelectedRegion(mouseClickLocation);
+                    RegionInformation currentRegion = _mapInfo.Info.GetSelectedRegion(_selectedLocation);
+                    RegionInformation newRegion = _mapInfo.Info.GetSelectedRegion(mouseClickLocation);
 
                     if (currentRegion == null || newRegion == null || RelocateArmyFunc == null)
                         break;
@@ -191,41 +198,19 @@ namespace GamePrototype.Models
             }
         }
 
-        // [TODO]: Using constant 1
-        public bool IsRegionAllowedToAttack(Point mouseClickLocation)
+        private bool IsRegionAllowedToAttack(Point mouseClickLocation)
         {
-            int attackedWIndex = MapProcessor.GetWIndex(mouseClickLocation);
-            int attackedHIndex = MapProcessor.GetHIndex(mouseClickLocation);
-            int currentWIndex = MapProcessor.GetWIndex(_selectedLocation);
-            int currentHIndex = MapProcessor.GetHIndex(_selectedLocation);
-
-            RegionInformation attackedRegion = GetSelectedRegion(mouseClickLocation);
-
-            return ((Math.Abs(attackedWIndex - currentWIndex) <= 1 && Math.Abs(attackedHIndex - currentHIndex) <= 1)
-                && attackedRegion != null && (attackedRegion.LandId != _mapInfo.OwnColor));
+            return _mapInfo.Info.IsRegionAllowedToAttack(mouseClickLocation, _selectedLocation, _mapInfo.OwnColor);
         }
 
-        // [TODO]: Using constant 1
-        public bool IsRegionAllowedToRelocation(Point mouseClickLocation)
+        private bool IsRegionAllowedToRelocation(Point mouseClickLocation)
         {
-            int newWIndex = MapProcessor.GetWIndex(mouseClickLocation);
-            int newHIndex = MapProcessor.GetHIndex(mouseClickLocation);
-            int currentWIndex = MapProcessor.GetWIndex(_selectedLocation);
-            int currentHIndex = MapProcessor.GetHIndex(_selectedLocation);
-
-            // Skip the same region
-            if (newWIndex == currentWIndex && newHIndex == currentHIndex)
-                return false;
-
-            RegionInformation newRegion = GetSelectedRegion(mouseClickLocation);
-
-            return ((Math.Abs(newWIndex - currentWIndex) <= 1 && Math.Abs(newHIndex - currentHIndex) <= 1)
-                && newRegion != null && (newRegion.LandId == _mapInfo.OwnColor));
+            return _mapInfo.Info.IsRegionAllowedToRelocation(mouseClickLocation, _selectedLocation);
         }
 
         public Bitmap GenerateMap()
         {
-            return MapProcessor.GenerateMap(_mapInfo, _selectedLocation, _mode);
+            return _mapInfo.GenerateMap(_selectedLocation, _mode);
         }
 
         public void ProcessCurrentBattles()
@@ -258,7 +243,7 @@ namespace GamePrototype.Models
                             case BattleResult.AttackerWon:
                             {
                                 // [TODO] Move defender army remainder to its near region
-                                RegionInformation[] regions = MapProcessor.GetNearOwnRegions(_mapInfo, targetRegion.Coordinates, targetRegion.LandId);
+                                RegionInformation[] regions = _mapInfo.Info.GetNearOwnRegions(targetRegion.Coordinates, targetRegion.LandId);
                                 if (regions != null && regions.Length > 0)
                                 {
                                     regions[0].Army.Count += battle.Defender.Count;
@@ -289,21 +274,6 @@ namespace GamePrototype.Models
                     _mapInfo.Info[wIndex, hIndex].Battles = null;
                 }
             }
-        }
-
-        // === Private methods section ===
-
-        private RegionInformation GetSelectedRegion(Point selectedLocation)
-        {
-            int wSelectedIndex = MapProcessor.GetWIndex(selectedLocation);
-            if (wSelectedIndex <= 0 || _mapInfo.Info.GetLength(0) <= wSelectedIndex)
-                return null;
-
-            int hSelectedIndex = MapProcessor.GetHIndex(selectedLocation);
-            if (hSelectedIndex <= 0 || _mapInfo.Info.GetLength(1) <= hSelectedIndex)
-                return null;
-
-            return _mapInfo.Info[wSelectedIndex, hSelectedIndex];
         }
     }
 }

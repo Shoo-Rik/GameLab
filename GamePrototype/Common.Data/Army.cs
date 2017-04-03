@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Drawing;
+using System.Xml.Serialization;
 
 namespace Common.Data
 {
@@ -13,7 +14,7 @@ namespace Common.Data
 
         // A6
         [XmlElement("From")]
-        public Coordinates From { get; set; }
+        public Point From { get; set; }
 
         // A11
         [XmlAttribute("lastStep")]

@@ -43,6 +43,7 @@
             this.btnMoveArmy = new System.Windows.Forms.Button();
             this.btnDefendRegion = new System.Windows.Forms.Button();
             this.btnAttackNearRegion = new System.Windows.Forms.Button();
+            this.btnCopyText = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.mapBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ownColorBox)).BeginInit();
@@ -105,6 +106,7 @@
             this.listBox1.FormattingEnabled = true;
             this.listBox1.Location = new System.Drawing.Point(677, 107);
             this.listBox1.Name = "listBox1";
+            this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.listBox1.Size = new System.Drawing.Size(396, 303);
             this.listBox1.TabIndex = 5;
             // 
@@ -209,11 +211,22 @@
             this.btnAttackNearRegion.UseVisualStyleBackColor = true;
             this.btnAttackNearRegion.Click += new System.EventHandler(this.btnAttack_Click);
             // 
+            // btnCopyText
+            // 
+            this.btnCopyText.Location = new System.Drawing.Point(765, 71);
+            this.btnCopyText.Name = "btnCopyText";
+            this.btnCopyText.Size = new System.Drawing.Size(112, 23);
+            this.btnCopyText.TabIndex = 8;
+            this.btnCopyText.Text = "Копировать текст";
+            this.btnCopyText.UseVisualStyleBackColor = true;
+            this.btnCopyText.Click += new System.EventHandler(this.btnCopyText_Click);
+            // 
             // MapForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1105, 669);
+            this.Controls.Add(this.btnCopyText);
             this.Controls.Add(this.actionGroupBox);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.exitButton);
@@ -251,6 +264,7 @@
         private System.Windows.Forms.Button btnAttackNearRegion;
         private System.Windows.Forms.Button btnMakeStep;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Button btnCopyText;
     }
 }
 
