@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Text;
 
 namespace GamePrototype.Models
 {
@@ -15,8 +16,8 @@ namespace GamePrototype.Models
         private static readonly int DefaultReserveCount = 2000;
         private static readonly int ReservePercentVariation = 35;
 
-        private static readonly int SelectedRegionColor = Color.DarkSlateGray.ToArgb();
-        private static readonly int DisabledRegionColor = Color.Gray.ToArgb();
+        private static readonly Color SelectedRegionColor = Color.DarkSlateGray;
+        private static readonly Color DisabledRegionColor = Color.Gray;
 
         private static int RegionSize = 64;
 
@@ -24,13 +25,13 @@ namespace GamePrototype.Models
 
         internal static readonly Random Rnd = new Random((int)DateTime.UtcNow.ToFileTime());
 
-        public static MapInfo InitializeMapInfo(int color)
+        public static MapInfo InitializeMapInfo(Color color)
         {
             var result = new MapInfo { OwnColor = color };
 
-            var color1 = Color.Red.ToArgb();
-            var color2 = Color.Green.ToArgb();
-            var color3 = Color.Blue.ToArgb();
+            var color1 = Color.Red;
+            var color2 = Color.Green;
+            var color3 = Color.Blue;
 
             const int widthCount = 10;
             const int heightCount = 10;
@@ -43,28 +44,28 @@ namespace GamePrototype.Models
                     switch (Rnd.Next(3))
                     {
                         case 0:
-                            result.Info[wIndex, hIndex] = new RegionInformation { LandId = color1 };
+                            result.Info[wIndex, hIndex] = new RegionInformation { Color = color1 };
                             break;
 
                         case 1:
-                            result.Info[wIndex, hIndex] = new RegionInformation { LandId = color2 };
+                            result.Info[wIndex, hIndex] = new RegionInformation { Color = color2 };
                             break;
 
                         case 2:
-                            result.Info[wIndex, hIndex] = new RegionInformation { LandId = color3 };
+                            result.Info[wIndex, hIndex] = new RegionInformation { Color = color3 };
                             break;
 
                         default:
                             throw new NotSupportedException("Random value");
                     }
 
-                    result.Info[wIndex, hIndex].Coordinates = new Point(wIndex, hIndex);
+                    result.Info[wIndex, hIndex].Coordinates = new Coordinates { X = wIndex, Y = hIndex };
 
                     int armyCount = DefaultArmyCount * (100 - ArmyPercentVariation + Rnd.Next(2 * ArmyPercentVariation)) / 100;
                     result.Info[wIndex, hIndex].Army = new Army
                     {
                         Count = armyCount,
-                        LandId = result.Info[wIndex, hIndex].LandId
+                        Color = result.Info[wIndex, hIndex].Color
                     };
 
                     int reserveCount = DefaultReserveCount * (100 - ReservePercentVariation + Rnd.Next(2 * ReservePercentVariation)) / 100;
@@ -94,46 +95,127 @@ namespace GamePrototype.Models
                 for (int hIndex = 0; hIndex < heightCount; ++hIndex)
                 {
                     bool hasBattle = false;
-                    int colorId;
+                    Color color;
                     if (wSelectedIndex == wIndex && hSelectedIndex == hIndex)
                     {
-                        colorId = SelectedRegionColor;
+                        color = SelectedRegionColor;
                     }
                     else if (!mapInfo.Info.IsRegionFromTargetArea(mode, new Point(wSelectedIndex, hSelectedIndex), new Point(wIndex, hIndex)))
                     {
-                        colorId = DisabledRegionColor;
+                        color = DisabledRegionColor;
                     }
                     else
                     {
-                        colorId = mapInfo.Info[wIndex, hIndex].LandId;
+                        color = mapInfo.Info[wIndex, hIndex].Color;
                         hasBattle = mapInfo.Info[wIndex, hIndex].Battles != null &&
                                     mapInfo.Info[wIndex, hIndex].Battles.Length > 0;
                     }
 
                     const int shift = 4;
                     int count = 0;
+                    int enemyCount = 0;
 
+                    // Mark attacked region
                     if (hasBattle)
                     {
                         foreach (var battle in mapInfo.Info[wIndex, hIndex].Battles)
                         {
-                            gr.FillRectangle(CreateBrush(battle.Attacker.LandId),
+                            gr.FillRectangle(CreateBrush(battle.Attacker.Color),
                                 new Rectangle(
                                     wIndex * RegionSize + count * shift,
                                     hIndex * RegionSize + count * shift,
                                     RegionSize - 1 - 2 * count * shift,
                                     RegionSize - 1 - 2 * count * shift));
                             ++count;
+                            enemyCount += battle.Attacker.Count;
                         }
                     }
 
-                    gr.FillRectangle(CreateBrush(colorId),
+                    gr.FillRectangle(CreateBrush(color),
                         new Rectangle(
                             wIndex * RegionSize + count * shift,
                             hIndex * RegionSize + count * shift,
                             RegionSize - 1 - 2 * count * shift,
                             RegionSize - 1 - 2 * count * shift));
+
+                    // Display region info
+                    int a = mapInfo.Info[wIndex, hIndex].Army.Count;
+                    int r = mapInfo.Info[wIndex, hIndex].Reserve.Count;
+                    int t = a + r;
+                    var printedInfo = new StringBuilder();
+                    printedInfo.AppendLine($"A: {a}");
+                    printedInfo.AppendLine($"R: {r}");
+                    printedInfo.AppendLine($"T: {t}");
+                    if (enemyCount > 0)
+                    {
+                        printedInfo.AppendLine($"------------");
+                        printedInfo.AppendLine($"E: {enemyCount}");
+                    }
+
+                    var rectangle = new Rectangle(
+                        wIndex * RegionSize,
+                        hIndex * RegionSize,
+                        RegionSize - 1,
+                        RegionSize - 1);
+
+                    Font font = new Font(FontFamily.GenericSansSerif, 8);
+                    Brush brush = CreateBrush(Color.Black);
+                    gr.DrawString(printedInfo.ToString(), font, brush, rectangle);
                 }
+            }
+            return bmp;
+        }
+
+        public static Bitmap GenerateHorizontalHeader(this MapInfo mapInfo)
+        {
+            int widthCount = mapInfo.Info.GetLength(0);
+            int heightCount = 1; //mapInfo.Info.GetLength(1);
+
+            Bitmap bmp = new Bitmap(RegionSize*widthCount, RegionSize*heightCount);
+            Graphics gr = Graphics.FromImage(bmp);
+
+            int hIndex = 0;
+            for (int wIndex = 0; wIndex < widthCount; ++wIndex)
+            {
+                var rectangle = new Rectangle(
+                    wIndex*RegionSize,
+                    hIndex*RegionSize,
+                    RegionSize - 1,
+                    RegionSize / 2);
+
+                gr.FillRectangle(CreateBrush(Color.Coral), rectangle);
+
+                Font font = new Font(FontFamily.GenericSansSerif, 16);
+                Brush brush = CreateBrush(Color.Black);
+                string printedInfo = new string((char)((char)'А' + ((wIndex == 9) ? wIndex+1 : wIndex)), 1);
+                gr.DrawString(printedInfo, font, brush, rectangle);
+            }
+            return bmp;
+        }
+
+        public static Bitmap GenerateVerticalHeader(this MapInfo mapInfo)
+        {
+            int widthCount = 1;
+            int heightCount = mapInfo.Info.GetLength(1);
+
+            Bitmap bmp = new Bitmap(RegionSize * widthCount, RegionSize * heightCount);
+            Graphics gr = Graphics.FromImage(bmp);
+
+            int wIndex = 0;
+            for (int hIndex = 0; hIndex < heightCount; ++hIndex)
+            {
+                var rectangle = new Rectangle(
+                    wIndex * RegionSize,
+                    hIndex * RegionSize,
+                    RegionSize / 2,
+                    RegionSize - 1);
+
+                gr.FillRectangle(CreateBrush(Color.DeepSkyBlue), rectangle);
+
+                Font font = new Font(FontFamily.GenericSansSerif, 16);
+                Brush brush = CreateBrush(Color.Black);
+                string printedInfo = (hIndex + 1).ToString();
+                gr.DrawString(printedInfo, font, brush, rectangle);
             }
             return bmp;
         }
@@ -148,12 +230,12 @@ namespace GamePrototype.Models
             return location.Y == 0 ? -1 : location.Y / RegionSize;
         }
 
-        public static SolidBrush CreateBrush(int colorId)
+        public static SolidBrush CreateBrush(Color color)
         {
-            return new SolidBrush(Color.FromArgb(colorId));
+            return new SolidBrush(color);
         }
 
-        public static RegionInformation[] GetNearOwnRegions(this RegionInformation[,] info, Point coordinates, int landId)
+        public static RegionInformation[] GetNearOwnRegions(this RegionInformation[,] info, Coordinates coordinates, Color color)
         {
             var result = new List<RegionInformation>();
 
@@ -175,7 +257,7 @@ namespace GamePrototype.Models
                     hIndex = coordinates.Y + y;
                     if (hIndex >= 0 && hIndex < hMaxIndex)
                     {
-                        result.TryAddRegion(info, landId, wIndex, hIndex);
+                        result.TryAddRegion(info, color, wIndex, hIndex);
                     }
                 }
 
@@ -188,7 +270,7 @@ namespace GamePrototype.Models
                     hIndex = coordinates.Y + y;
                     if (hIndex >= 0 && hIndex < hMaxIndex)
                     {
-                        result.TryAddRegion(info, landId, wIndex, hIndex);
+                        result.TryAddRegion(info, color, wIndex, hIndex);
                     }
                 }
 
@@ -201,7 +283,7 @@ namespace GamePrototype.Models
                     wIndex = coordinates.X + x;
                     if (wIndex >= 0 && wIndex < wMaxIndex)
                     {
-                        result.TryAddRegion(info, landId, wIndex, hIndex);
+                        result.TryAddRegion(info, color, wIndex, hIndex);
                     }
                 }
 
@@ -214,7 +296,7 @@ namespace GamePrototype.Models
                     wIndex = coordinates.X + x;
                     if (wIndex >= 0 || wIndex < wMaxIndex)
                     {
-                        result.TryAddRegion(info, landId, wIndex, hIndex);
+                        result.TryAddRegion(info, color, wIndex, hIndex);
                     }
                 }
             }
@@ -223,7 +305,7 @@ namespace GamePrototype.Models
         }
 
         // [TODO]: Using constant 1
-        public static bool IsRegionAllowedToAttack(this RegionInformation[,] info, Point mouseClickLocation, Point selectedLocation, int ownColor)
+        public static bool IsRegionAllowedToAttack(this RegionInformation[,] info, Point mouseClickLocation, Point selectedLocation, Color ownColor)
         {
             int attackedWIndex = GetWIndex(mouseClickLocation);
             int attackedHIndex = GetHIndex(mouseClickLocation);
@@ -233,7 +315,7 @@ namespace GamePrototype.Models
             RegionInformation attackedRegion = info.GetSelectedRegion(mouseClickLocation);
 
             return ((Math.Abs(attackedWIndex - currentWIndex) <= 1 && Math.Abs(attackedHIndex - currentHIndex) <= 1)
-                && attackedRegion != null && (attackedRegion.LandId != ownColor));
+                && attackedRegion != null && (attackedRegion.Color != ownColor));
         }
 
         public static bool IsRegionAllowedToRelocation(this RegionInformation[,] info, Point mouseClickLocation, Point selectedLocation)
@@ -261,10 +343,10 @@ namespace GamePrototype.Models
 
         // === Private methods section ===
 
-        private static void TryAddRegion(this ICollection<RegionInformation> result, RegionInformation[,] info, int targetLandId, int wIndex, int hIndex)
+        private static void TryAddRegion(this ICollection<RegionInformation> result, RegionInformation[,] info, Color targetColor, int wIndex, int hIndex)
         {
             RegionInformation i = info[wIndex, hIndex];
-            if (i.LandId == targetLandId)
+            if (i.Color == targetColor)
             {
                 result.Add(i);
             }
@@ -285,7 +367,7 @@ namespace GamePrototype.Models
                 }
                 case GameMode.Relocation:
                 {
-                    int targetLandId = info[targetCoordinates.X, targetCoordinates.Y].LandId;
+                    Color targetColor = info[targetCoordinates.X, targetCoordinates.Y].Color;
                     var usedList = new List<Point> {targetCoordinates};
                     for (int i = 0; i < usedList.Count; ++i)
                     {
@@ -309,7 +391,7 @@ namespace GamePrototype.Models
 
                                 var currentCoordinates = new Point(currentWIndex + wShift, currentHIndex + hShift);
 
-                                if (targetLandId == info[currentCoordinates.X, currentCoordinates.Y].LandId &&
+                                if (targetColor == info[currentCoordinates.X, currentCoordinates.Y].Color &&
                                     !usedList.Contains(currentCoordinates))
                                 {
                                     if (coordinatesToCheck.Equals(currentCoordinates))

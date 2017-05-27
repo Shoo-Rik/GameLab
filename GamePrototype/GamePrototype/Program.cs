@@ -37,7 +37,7 @@ namespace GamePrototype
                 return;
 
             // [TODO]: Move to config
-            int color = Color.Red.ToArgb();
+            var color = Color.Red;
 
             // 2. Get model
 

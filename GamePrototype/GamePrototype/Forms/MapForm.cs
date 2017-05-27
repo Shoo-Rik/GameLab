@@ -72,6 +72,16 @@ namespace GamePrototype.Forms
             e.Graphics.DrawImage(_model.GenerateMap(), new Point(0, 0));
         }
 
+        private void hHeaderBox_Paint(object sender, PaintEventArgs e)
+        {
+            e.Graphics.DrawImage(_model.GenerateHorizontalHeader(), new Point(0, 0));
+        }
+
+        private void vHeaderBox_Paint(object sender, PaintEventArgs e)
+        {
+            e.Graphics.DrawImage(_model.GenerateVerticalHeader(), new Point(0, 0));
+        }
+
         private void ownColorBox_Paint(object sender, PaintEventArgs e)
         {
             Bitmap bmp = new Bitmap(e.ClipRectangle.Width, e.ClipRectangle.Height);

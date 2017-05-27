@@ -13,9 +13,9 @@ namespace Common.Data
         public BattleResult Result { get; set; }
 
         [XmlIgnore]
-        public Point From
+        public Coordinates From
         {
-            get { return (Defender != null) ? Defender.From : new Point(); }
+            get { return (Defender != null) ? Defender.From : new Coordinates(); }
         }
 
         [XmlAttribute("a_dmg")]

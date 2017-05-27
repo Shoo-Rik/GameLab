@@ -45,6 +45,7 @@
     <Compile Include="Battle.cs" />
     <Compile Include="BattleHistory.cs" />
     <Compile Include="BattleResult.cs" />
+    <Compile Include="CoordinateHelper.cs" />
     <Compile Include="Coordinates.cs" />
     <Compile Include="GameAction.cs" />
     <Compile Include="GameMode.cs" />

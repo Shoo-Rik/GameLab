@@ -15,7 +15,7 @@ namespace GamePrototype.Models
             IList<Battle> allBattles)
         {
             // [TODO]: Join with other own regions?
-            Battle battle = GetCurrentBattle(toRegion, fromRegion.LandId, fromRegion.Coordinates, currentStep);
+            Battle battle = GetCurrentBattle(toRegion, fromRegion.Color, fromRegion.Coordinates, currentStep);
             int previousArmyCount = battle?.Attacker.Count ?? 0;
 
             //if (fromRegion.Army.Count < armyCount)
@@ -31,13 +31,13 @@ namespace GamePrototype.Models
                     {
                         Attacker = new Army
                         {
-                            LandId = fromRegion.LandId,
+                            Color = fromRegion.Color,
                             From = fromRegion.Coordinates,
                             Count = armyCount
                         },
                         Defender = new Army
                         {
-                            LandId = toRegion.LandId,
+                            Color = toRegion.Color,
                             From = toRegion.Coordinates,
                             // Count set dynamically
                         },
@@ -69,7 +69,7 @@ namespace GamePrototype.Models
             }
         }
 
-        public static Battle GetCurrentBattle(RegionInformation defenderRegion, int attackerId, Point attackerCoordinates, int currentStep)
+        public static Battle GetCurrentBattle(RegionInformation defenderRegion, Color attackerColor, Coordinates attackerCoordinates, int currentStep)
         {
             Battle result = null;
 
@@ -78,7 +78,7 @@ namespace GamePrototype.Models
 
             foreach (var battle in defenderRegion.Battles)
             {
-                if ((battle.Attacker.LandId == attackerId) &&
+                if ((battle.Attacker.Color == attackerColor) &&
                     (battle.Attacker.From.Equals(attackerCoordinates)) &&
                     (battle.Step == currentStep))
                 {

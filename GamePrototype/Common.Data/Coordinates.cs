@@ -1,4 +1,4 @@
-﻿/*using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace Common.Data
 {
@@ -26,4 +26,3 @@ namespace Common.Data
         }
     }
 }
-*/

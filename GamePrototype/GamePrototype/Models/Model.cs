@@ -30,7 +30,7 @@ namespace GamePrototype.Models
 
         // === Public methods section ===
 
-        public Model(int color)
+        public Model(Color color)
         {
             _mapInfo = MapProcessor.InitializeMapInfo(color);
         }
@@ -44,7 +44,7 @@ namespace GamePrototype.Models
         {
             MapInfoSerializer.Serialize(_mapInfo, filePath);
         }
-        
+
         public string[] GetRegionInfoStrings(Point? location = null)
         {
             var result = new List<string>();
@@ -63,13 +63,18 @@ namespace GamePrototype.Models
                 result.Add(string.Empty);
                 result.Add($"Армия: {info.Army.Count}");
                 result.Add($"Резерв: {info.Reserve.Count}");
+                result.Add($"Тотал: {info.Army.Count + info.Reserve.Count}");
 
                 if (info.Battles != null)
                 {
                     foreach (var battle in info.Battles)
                     {
+                        string hRegionIndex = CoordinateHelper.HorizontalIndexToCoordinate(battle.Attacker.From.X);
+                        string vRegionIndex = CoordinateHelper.VerticalIndexToCoordinate(battle.Attacker.From.Y);
+                        string colorString = CoordinateHelper.GetColorName(battle.Attacker.Color);
+
                         result.Add(string.Empty);
-                        result.Add($"Атакован армией '{(battle.Attacker.LandId & 0xFFFFFF):X}' из региона ({battle.Attacker.From.X+1}:{battle.Attacker.From.Y+1})");
+                        result.Add($"Атакован армией '{colorString}' из региона {hRegionIndex}{vRegionIndex}");
                         result.Add($"Численность: {battle.Attacker.Count}");
                     }
                 }
@@ -85,14 +90,20 @@ namespace GamePrototype.Models
                     }
                     string attackerResultString = battle.Result == BattleResult.AttackerWon ? "победила" : "проиграла";
                     string defenderResultString = battle.Result != BattleResult.AttackerWon ? "победила" : "проиграла";
+
+                    string hRegionIndex = CoordinateHelper.HorizontalIndexToCoordinate(battle.Attacker.From.X);
+                    string vRegionIndex = CoordinateHelper.VerticalIndexToCoordinate(battle.Attacker.From.Y);
+                    string attackerColorString = CoordinateHelper.GetColorName(battle.Attacker.Color);
+                    string defenderColorString = CoordinateHelper.GetColorName(battle.Defender.Color);
+
                     result.Add(string.Empty);
                     result.Add($"ХОД {battle.Step}");
                     result.Add(string.Empty);
-                    result.Add($"Атакующая армия '{(battle.Attacker.LandId & 0xFFFFFF):X}' из региона ({battle.Attacker.From.X + 1}:{battle.Attacker.From.Y + 1}) {attackerResultString}");
+                    result.Add($"Атакующая армия '{attackerColorString}' из региона {hRegionIndex}{vRegionIndex} {attackerResultString}");
                     result.Add($"Понесённый урон: {battle.AttackerDamage}");
                     result.Add($"Остаток армии: {battle.Attacker.Count}");
                     result.Add(string.Empty);
-                    result.Add($"Защищающая армия '{(battle.Defender.LandId & 0xFFFFFF):X}' {defenderResultString}");
+                    result.Add($"Защищающая армия '{defenderColorString}' {defenderResultString}");
                     result.Add($"Понесённый урон: {battle.DefenderDamage}");
                     result.Add($"Остаток армии: {battle.Defender.Count}");
                     result.Add($"Остаток резерва: {battle.DefenderReserve.Count}");
@@ -102,7 +113,7 @@ namespace GamePrototype.Models
             return result.ToArray();
         }
 
-        public int GetOwnColor()
+        public Color GetOwnColor()
         {
             return _mapInfo.OwnColor;
         }
@@ -126,7 +137,7 @@ namespace GamePrototype.Models
             {
                 case GameAction.Attack:
                     currentRegion = _mapInfo.Info.GetSelectedRegion(_selectedLocation);
-                    if (currentRegion == null || currentRegion.LandId != _mapInfo.OwnColor)
+                    if (currentRegion == null || currentRegion.Color != _mapInfo.OwnColor)
                     {
                         return false;
                     }
@@ -135,7 +146,7 @@ namespace GamePrototype.Models
 
                 case GameAction.Relocation:
                     currentRegion = _mapInfo.Info.GetSelectedRegion(_selectedLocation);
-                    if (currentRegion == null || currentRegion.LandId != _mapInfo.OwnColor)
+                    if (currentRegion == null || currentRegion.Color != _mapInfo.OwnColor)
                     {
                         return false;
                     }
@@ -213,6 +224,16 @@ namespace GamePrototype.Models
             return _mapInfo.GenerateMap(_selectedLocation, _mode);
         }
 
+        public Bitmap GenerateHorizontalHeader()
+        {
+            return _mapInfo.GenerateHorizontalHeader();
+        }
+
+        public Bitmap GenerateVerticalHeader()
+        {
+            return _mapInfo.GenerateVerticalHeader();
+        }
+
         public void ProcessCurrentBattles()
         {
             for (int wIndex = 0; wIndex < _mapInfo.Info.GetLength(0); ++wIndex)
@@ -243,17 +264,17 @@ namespace GamePrototype.Models
                             case BattleResult.AttackerWon:
                             {
                                 // [TODO] Move defender army remainder to its near region
-                                RegionInformation[] regions = _mapInfo.Info.GetNearOwnRegions(targetRegion.Coordinates, targetRegion.LandId);
+                                RegionInformation[] regions = _mapInfo.Info.GetNearOwnRegions(targetRegion.Coordinates, targetRegion.Color);
                                 if (regions != null && regions.Length > 0)
                                 {
                                     regions[0].Army.Count += battle.Defender.Count;
                                 }
                                 else
                                 {
-                                    MessageBox.Show($"Игрок '{targetRegion.LandId}' проиграл!");
+                                    MessageBox.Show($"Игрок '{targetRegion.Color}' проиграл!");
                                 }
 
-                                targetRegion.LandId = battle.Attacker.LandId;
+                                targetRegion.Color = battle.Attacker.Color;
                                 targetRegion.Army.Count = battle.Attacker.Count;
                                 targetRegion.Reserve.Count = 0; // [TODO]: Rule of calculation of Reserve count
                                 break;

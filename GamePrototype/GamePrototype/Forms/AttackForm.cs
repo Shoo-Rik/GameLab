@@ -27,7 +27,7 @@ namespace GamePrototype.Forms
 
         private void AttackForm_Load(object sender, EventArgs e)
         {
-            Battle battle = BattleProcessor.GetCurrentBattle(_attackedRegion, _sourceRegion.LandId, _sourceRegion.Coordinates, _currentStep);
+            Battle battle = BattleProcessor.GetCurrentBattle(_attackedRegion, _sourceRegion.Color, _sourceRegion.Coordinates, _currentStep);
             int currentArmyCount = battle?.Attacker.Count ?? 0;
 
             int sourceArmyCount = _sourceRegion.Army.Count + currentArmyCount;

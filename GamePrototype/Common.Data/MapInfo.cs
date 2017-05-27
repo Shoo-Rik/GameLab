@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 
 namespace Common.Data
 {
@@ -9,7 +10,7 @@ namespace Common.Data
             BattleHistory = new List<Battle>();
         }
 
-        public int OwnColor { get; set; }
+        public Color OwnColor { get; set; }
 
         public int Step { get; set; }
 

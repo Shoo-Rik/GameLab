@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Xml.Serialization;
 
 namespace Common.Data
@@ -6,15 +7,31 @@ namespace Common.Data
     [XmlRoot]
     public class Army
     {
-        [XmlAttribute("id")]
-        public int LandId { get; set; }
+        [XmlAttribute("color")]
+        public string ColorName { get; set; }
+
+        [XmlIgnore]
+        public Color Color
+        {
+            get
+            {
+                if (String.IsNullOrEmpty(ColorName))
+                    return Color.White;
+
+                return Color.FromName(ColorName);
+            }
+            set
+            {
+                ColorName = value.Name;
+            }
+        }
 
         [XmlAttribute("count")]
         public int Count { get; set; }
 
         // A6
         [XmlElement("From")]
-        public Point From { get; set; }
+        public Coordinates From { get; set; }
 
         // A11
         [XmlAttribute("lastStep")]

@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Xml.Serialization;
 
 namespace Common.Data
@@ -6,11 +7,27 @@ namespace Common.Data
     [XmlRoot("RI")]
     public class RegionInformation
     {
-        [XmlAttribute("id")]
-        public int LandId { get; set; }
+        [XmlAttribute("color")]
+        public string ColorName { get; set; }
+
+        [XmlIgnore]
+        public Color Color
+        {
+            get
+            {
+                if (String.IsNullOrEmpty(ColorName))
+                    return Color.White;
+
+                return Color.FromName(ColorName);
+            }
+            set
+            {
+                ColorName = value.Name;
+            }
+        }
 
         [XmlElement("CO")]
-        public Point Coordinates { get; set; }
+        public Coordinates Coordinates { get; set; }
 
         [XmlElement("Army")]
         public Army Army { get; set; }

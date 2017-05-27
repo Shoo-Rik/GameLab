@@ -44,16 +44,20 @@
             this.btnDefendRegion = new System.Windows.Forms.Button();
             this.btnAttackNearRegion = new System.Windows.Forms.Button();
             this.btnCopyText = new System.Windows.Forms.Button();
+            this.hHeaderBox = new System.Windows.Forms.PictureBox();
+            this.vHeaderBox = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.mapBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ownColorBox)).BeginInit();
             this.actionGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.hHeaderBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.vHeaderBox)).BeginInit();
             this.SuspendLayout();
             // 
             // saveButton
             // 
             this.saveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.saveButton.Location = new System.Drawing.Point(998, 12);
+            this.saveButton.Location = new System.Drawing.Point(1036, 12);
             this.saveButton.Name = "saveButton";
             this.saveButton.Size = new System.Drawing.Size(75, 23);
             this.saveButton.TabIndex = 1;
@@ -64,7 +68,7 @@
             // exitButton
             // 
             this.exitButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.exitButton.Location = new System.Drawing.Point(998, 42);
+            this.exitButton.Location = new System.Drawing.Point(1036, 42);
             this.exitButton.Name = "exitButton";
             this.exitButton.Size = new System.Drawing.Size(75, 23);
             this.exitButton.TabIndex = 2;
@@ -74,7 +78,7 @@
             // 
             // mapBox
             // 
-            this.mapBox.Location = new System.Drawing.Point(12, 12);
+            this.mapBox.Location = new System.Drawing.Point(42, 42);
             this.mapBox.Name = "mapBox";
             this.mapBox.Size = new System.Drawing.Size(640, 640);
             this.mapBox.TabIndex = 0;
@@ -85,7 +89,7 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.ownColorBox);
-            this.groupBox1.Location = new System.Drawing.Point(677, 12);
+            this.groupBox1.Location = new System.Drawing.Point(715, 13);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(75, 89);
             this.groupBox1.TabIndex = 4;
@@ -104,7 +108,7 @@
             // listBox1
             // 
             this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(677, 107);
+            this.listBox1.Location = new System.Drawing.Point(715, 108);
             this.listBox1.Name = "listBox1";
             this.listBox1.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.listBox1.Size = new System.Drawing.Size(396, 303);
@@ -120,7 +124,7 @@
             this.actionGroupBox.Controls.Add(this.btnMoveArmy);
             this.actionGroupBox.Controls.Add(this.btnDefendRegion);
             this.actionGroupBox.Controls.Add(this.btnAttackNearRegion);
-            this.actionGroupBox.Location = new System.Drawing.Point(677, 416);
+            this.actionGroupBox.Location = new System.Drawing.Point(715, 417);
             this.actionGroupBox.Name = "actionGroupBox";
             this.actionGroupBox.Size = new System.Drawing.Size(396, 236);
             this.actionGroupBox.TabIndex = 6;
@@ -213,7 +217,7 @@
             // 
             // btnCopyText
             // 
-            this.btnCopyText.Location = new System.Drawing.Point(765, 71);
+            this.btnCopyText.Location = new System.Drawing.Point(803, 72);
             this.btnCopyText.Name = "btnCopyText";
             this.btnCopyText.Size = new System.Drawing.Size(112, 23);
             this.btnCopyText.TabIndex = 8;
@@ -221,11 +225,31 @@
             this.btnCopyText.UseVisualStyleBackColor = true;
             this.btnCopyText.Click += new System.EventHandler(this.btnCopyText_Click);
             // 
+            // hHeaderBox
+            // 
+            this.hHeaderBox.Location = new System.Drawing.Point(42, 5);
+            this.hHeaderBox.Name = "hHeaderBox";
+            this.hHeaderBox.Size = new System.Drawing.Size(640, 32);
+            this.hHeaderBox.TabIndex = 9;
+            this.hHeaderBox.TabStop = false;
+            this.hHeaderBox.Paint += new System.Windows.Forms.PaintEventHandler(this.hHeaderBox_Paint);
+            // 
+            // hHeaderBox
+            // 
+            this.vHeaderBox.Location = new System.Drawing.Point(5, 42);
+            this.vHeaderBox.Name = "hHeaderBox";
+            this.vHeaderBox.Size = new System.Drawing.Size(32, 640);
+            this.vHeaderBox.TabIndex = 10;
+            this.vHeaderBox.TabStop = false;
+            this.vHeaderBox.Paint += new System.Windows.Forms.PaintEventHandler(this.vHeaderBox_Paint);
+            // 
             // MapForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1105, 669);
+            this.ClientSize = new System.Drawing.Size(1143, 695);
+            this.Controls.Add(this.vHeaderBox);
+            this.Controls.Add(this.hHeaderBox);
             this.Controls.Add(this.btnCopyText);
             this.Controls.Add(this.actionGroupBox);
             this.Controls.Add(this.listBox1);
@@ -243,6 +267,8 @@
             this.groupBox1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.ownColorBox)).EndInit();
             this.actionGroupBox.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.hHeaderBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.vHeaderBox)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -265,6 +291,8 @@
         private System.Windows.Forms.Button btnMakeStep;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnCopyText;
+        private System.Windows.Forms.PictureBox hHeaderBox;
+        private System.Windows.Forms.PictureBox vHeaderBox;
     }
 }
 
