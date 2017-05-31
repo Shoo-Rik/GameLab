@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.saveButton = new System.Windows.Forms.Button();
             this.exitButton = new System.Windows.Forms.Button();
             this.mapBox = new System.Windows.Forms.PictureBox();
@@ -46,6 +47,7 @@
             this.btnCopyText = new System.Windows.Forms.Button();
             this.hHeaderBox = new System.Windows.Forms.PictureBox();
             this.vHeaderBox = new System.Windows.Forms.PictureBox();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.mapBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ownColorBox)).BeginInit();
@@ -234,14 +236,19 @@
             this.hHeaderBox.TabStop = false;
             this.hHeaderBox.Paint += new System.Windows.Forms.PaintEventHandler(this.hHeaderBox_Paint);
             // 
-            // hHeaderBox
+            // vHeaderBox
             // 
             this.vHeaderBox.Location = new System.Drawing.Point(5, 42);
-            this.vHeaderBox.Name = "hHeaderBox";
+            this.vHeaderBox.Name = "vHeaderBox";
             this.vHeaderBox.Size = new System.Drawing.Size(32, 640);
             this.vHeaderBox.TabIndex = 10;
             this.vHeaderBox.TabStop = false;
             this.vHeaderBox.Paint += new System.Windows.Forms.PaintEventHandler(this.vHeaderBox_Paint);
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             // 
             // MapForm
             // 
@@ -293,6 +300,7 @@
         private System.Windows.Forms.Button btnCopyText;
         private System.Windows.Forms.PictureBox hHeaderBox;
         private System.Windows.Forms.PictureBox vHeaderBox;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
     }
 }
 

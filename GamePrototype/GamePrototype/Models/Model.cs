@@ -100,11 +100,11 @@ namespace GamePrototype.Models
                     result.Add($"ХОД {battle.Step}");
                     result.Add(string.Empty);
                     result.Add($"Атакующая армия '{attackerColorString}' из региона {hRegionIndex}{vRegionIndex} {attackerResultString}");
-                    result.Add($"Понесённый урон: {battle.AttackerDamage}");
+                    result.Add($"Понесённый урон: {battle.DamageToAttacker}");
                     result.Add($"Остаток армии: {battle.Attacker.Count}");
                     result.Add(string.Empty);
                     result.Add($"Защищающая армия '{defenderColorString}' {defenderResultString}");
-                    result.Add($"Понесённый урон: {battle.DefenderDamage}");
+                    result.Add($"Понесённый урон: {battle.DamageToDefender}");
                     result.Add($"Остаток армии: {battle.Defender.Count}");
                     result.Add($"Остаток резерва: {battle.DefenderReserve.Count}");
                     result.Add("-------------------------------------------------");
@@ -286,6 +286,11 @@ namespace GamePrototype.Models
 
                                 RegionInformation attackerRegion = _mapInfo.Info[battle.Attacker.From.X, battle.Attacker.From.Y];
                                 attackerRegion.Army.Count += battle.Attacker.Count;
+                                break;
+                            }
+                            case BattleResult.Draw:
+                            {
+                                // [TODO]
                                 break;
                             }
                         }

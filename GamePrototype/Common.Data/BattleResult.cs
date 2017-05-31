@@ -7,6 +7,6 @@ namespace Common.Data
         Unknown = 0,
         AttackerWon = 1,
         AttackerLost = 2,
-        //Draw = 3
+        Draw = 3
     }
 }

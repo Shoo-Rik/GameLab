@@ -19,10 +19,10 @@ namespace Common.Data
         }
 
         [XmlAttribute("a_dmg")]
-        public int AttackerDamage { get; set; }
+        public int DamageToAttacker { get; set; }
 
         [XmlAttribute("d_dmg")]
-        public int DefenderDamage { get; set; }
+        public int DamageToDefender { get; set; }
 
         // A4
         [XmlElement("A")]

@@ -21,6 +21,15 @@ namespace GamePrototype.Forms
 
             _model = model;
             _model.ModeChangedEvent += OnModeChanged;
+
+            // создаем элемент меню
+            ToolStripMenuItem copyMenuItem = new ToolStripMenuItem("Копировать");
+            // добавляем элемент в меню
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { copyMenuItem });
+            // ассоциируем контекстное меню со списком
+            this.listBox1.ContextMenuStrip = contextMenuStrip1;
+            // устанавливаем обработчики событий для меню
+            copyMenuItem.Click += btnCopyText_Click;
         }
 
         private void MapForm_Load(object sender, EventArgs e)

@@ -9,7 +9,8 @@ namespace GamePrototype.Models
 {
     public static class BattleProcessor
     {
-        private static readonly int MaxDamagePercent = 30; // [TODO]
+        private static readonly int MaxDamagePercentDeviation = 30; // [TODO]
+        private static readonly int MeanDamagePercent = 30; // [TODO]
 
         public static void SetBattleInRegion(int currentStep, RegionInformation fromRegion, RegionInformation toRegion, int armyCount,
             IList<Battle> allBattles)
@@ -96,43 +97,54 @@ namespace GamePrototype.Models
             int attackerCount = battle.Attacker.Count;
             int defenderCount = battle.Defender.Count + battle.DefenderReserve.Count;
 
-            int attackerDamagePercent = MapProcessor.Rnd.Next(MaxDamagePercent);
-            int defenderDamagePercent = MapProcessor.Rnd.Next(MaxDamagePercent);
+            // Interval from -MaxDamagePercent to MaxDamagePercent
+            int attackerPercentDeviation = MapProcessor.Rnd.Next(2 * MaxDamagePercentDeviation) - MaxDamagePercentDeviation;
+            int defenderPercentDeviation = MapProcessor.Rnd.Next(2 * MaxDamagePercentDeviation) - MaxDamagePercentDeviation;
 
-            battle.DefenderDamage = attackerCount*attackerDamagePercent/100;
-            battle.AttackerDamage = defenderCount*defenderDamagePercent/100;
+            double attackerDamagePercent = MeanDamagePercent * (1 + (double)attackerPercentDeviation / 100);
+            double defenderDamagePercent = MeanDamagePercent * (1 + (double)defenderPercentDeviation / 100);
+
+            battle.DamageToDefender = (int)(attackerCount * attackerDamagePercent / 100);
+            battle.DamageToAttacker = (int)(defenderCount * defenderDamagePercent / 100);
 
             int newAttackerCount;
             int newDefenderCount;
 
-            if (battle.AttackerDamage <= attackerCount && battle.DefenderDamage <= defenderCount)
+            if (battle.DamageToAttacker < attackerCount && battle.DamageToDefender < defenderCount)
             {
-                newAttackerCount = attackerCount - battle.AttackerDamage;
-                newDefenderCount = defenderCount - battle.DefenderDamage;
+                newAttackerCount = attackerCount - battle.DamageToAttacker;
+                newDefenderCount = defenderCount - battle.DamageToDefender;
+
+                battle.Result = (newAttackerCount > newDefenderCount)
+                    ? BattleResult.AttackerWon
+                    : BattleResult.AttackerLost; 
+                // [TODO] BattleResult.Draw;
             }
-            else if (battle.AttackerDamage > attackerCount && battle.DefenderDamage <= defenderCount)
+            else if (battle.DamageToAttacker >= attackerCount && battle.DamageToDefender < defenderCount)
             {
                 newAttackerCount = 0;
-                newDefenderCount = defenderCount - battle.DefenderDamage * attackerCount / battle.AttackerDamage;
+                newDefenderCount = defenderCount - battle.DamageToDefender * attackerCount / battle.DamageToAttacker;
+
+                battle.Result = BattleResult.AttackerLost;
             }
-            else if (battle.AttackerDamage <= attackerCount && battle.DefenderDamage > defenderCount)
+            else if (battle.DamageToAttacker < attackerCount && battle.DamageToDefender >= defenderCount)
             {
-                newAttackerCount = attackerCount - battle.AttackerDamage * defenderCount / battle.DefenderDamage;
+                newAttackerCount = attackerCount - battle.DamageToAttacker * defenderCount / battle.DamageToDefender;
                 newDefenderCount = 0;
+
+                battle.Result = BattleResult.AttackerWon;
             }
             else // if (attackerDamage > defenderCount && defenderDamage > attackerCount)
             {
                 throw new InvalidOperationException("Impossible case: attackerDamage > defenderCount && defenderDamage > attackerCount");
             }
 
-            battle.Result = (newAttackerCount > newDefenderCount) ? BattleResult.AttackerWon : BattleResult.AttackerLost;
-
             battle.Attacker.Count = newAttackerCount;
-            battle.Defender.Count = newDefenderCount*battle.Defender.Count/defenderCount; // [TODO]: Proprtion must be changed?
+            battle.Defender.Count = newDefenderCount * battle.Defender.Count / defenderCount; // [TODO]: Proprtion must be changed?
             battle.DefenderReserve.Count = newDefenderCount - battle.Defender.Count;
 
-            battle.AttackerDamage = attackerCount - newAttackerCount;
-            battle.DefenderDamage = defenderCount - newDefenderCount;
+            battle.DamageToAttacker = attackerCount - newAttackerCount;
+            battle.DamageToDefender = defenderCount - newDefenderCount;
         }
     }
 }

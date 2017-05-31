@@ -31,7 +31,7 @@ namespace GamePrototype.Models
 
             var color1 = Color.Red;
             var color2 = Color.Green;
-            var color3 = Color.Blue;
+            var color3 = Color.DarkOrange;
 
             const int widthCount = 10;
             const int heightCount = 10;
@@ -141,16 +141,14 @@ namespace GamePrototype.Models
                     // Display region info
                     int a = mapInfo.Info[wIndex, hIndex].Army.Count;
                     int r = mapInfo.Info[wIndex, hIndex].Reserve.Count;
-                    int t = a + r;
+                    //int t = a + r;
                     var printedInfo = new StringBuilder();
-                    printedInfo.AppendLine($"A: {a}");
-                    printedInfo.AppendLine($"R: {r}");
-                    printedInfo.AppendLine($"T: {t}");
-                    if (enemyCount > 0)
+                    printedInfo.AppendLine($"{a} / {r}");
+                    /*if (enemyCount > 0)
                     {
                         printedInfo.AppendLine($"------------");
                         printedInfo.AppendLine($"E: {enemyCount}");
-                    }
+                    }*/
 
                     var rectangle = new Rectangle(
                         wIndex * RegionSize,
@@ -187,7 +185,7 @@ namespace GamePrototype.Models
 
                 Font font = new Font(FontFamily.GenericSansSerif, 16);
                 Brush brush = CreateBrush(Color.Black);
-                string printedInfo = new string((char)((char)'А' + ((wIndex == 9) ? wIndex+1 : wIndex)), 1);
+                string printedInfo = new string((char)('А' + ((wIndex == 9) ? wIndex+1 : wIndex)), 1);
                 gr.DrawString(printedInfo, font, brush, rectangle);
             }
             return bmp;
