@@ -1,9 +1,9 @@
-﻿using GamePrototype.Forms;
-using GamePrototype.Models;
-using System;
+﻿using System;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using Engine;
+using Forms;
 
 namespace GamePrototype
 {
@@ -34,10 +34,13 @@ namespace GamePrototype
             };
 
             if (startupForm.ShowDialog() != DialogResult.OK)
+            {
                 return;
+            }
 
-            // [TODO]: Move to config
-            var color = Color.Red;
+            Color ownColor = startupForm.OwnColor;
+            Color enemy1Color = startupForm.Enemy1Color;
+            Color enemy2Color = startupForm.Enemy2Color;
 
             // 2. Get model
 
@@ -45,7 +48,7 @@ namespace GamePrototype
 
             if (startupForm.LoadType == LoadType.NewGame)
             {
-                model = new Model(color);
+                model = new Model(ownColor, enemy1Color, enemy2Color);
             }
             if (startupForm.LoadType == LoadType.LoadGame)
             {
