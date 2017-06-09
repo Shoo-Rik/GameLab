@@ -12,10 +12,7 @@ namespace Data
         public BattleResult Result { get; set; }
 
         [XmlIgnore]
-        public Coordinates From
-        {
-            get { return (Defender != null) ? Defender.From : new Coordinates(); }
-        }
+        public Coordinates From => (Defender != null) ? Defender.From : new Coordinates();
 
         [XmlAttribute("a_dmg")]
         public int DamageToAttacker { get; set; }

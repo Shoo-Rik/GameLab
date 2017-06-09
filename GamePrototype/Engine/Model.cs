@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using Data;
 
@@ -93,15 +94,18 @@ namespace Engine
                     string attackerColorString = CoordinateHelper.GetColorName(battle.Attacker.Color);
                     string defenderColorString = CoordinateHelper.GetColorName(battle.Defender.Color);
 
+                    double attackerDamageRate = (double)(100 * battle.DamageToAttacker) / (battle.DamageToAttacker + battle.Attacker.Count);
+                    double defenderDamageRate = (double)(100 * battle.DamageToDefender) / (battle.DamageToDefender + battle.DamageToDefender + battle.DefenderReserve.Count);
+
                     result.Add(string.Empty);
                     result.Add($"ХОД {battle.Step}");
                     result.Add(string.Empty);
                     result.Add($"Атакующая армия '{attackerColorString}' из региона {hRegionIndex}{vRegionIndex} {attackerResultString}");
-                    result.Add($"Понесённый урон: {battle.DamageToAttacker}");
+                    result.Add($"Понесённый урон: {battle.DamageToAttacker} ({attackerDamageRate:F1}%)");
                     result.Add($"Остаток армии: {battle.Attacker.Count}");
                     result.Add(string.Empty);
                     result.Add($"Защищающая армия '{defenderColorString}' {defenderResultString}");
-                    result.Add($"Понесённый урон: {battle.DamageToDefender}");
+                    result.Add($"Понесённый урон: {battle.DamageToDefender} ({defenderDamageRate:F1}%)");
                     result.Add($"Остаток армии: {battle.Defender.Count}");
                     result.Add($"Остаток резерва: {battle.DefenderReserve.Count}");
                     result.Add("-------------------------------------------------");
@@ -233,68 +237,155 @@ namespace Engine
 
         public void ProcessCurrentBattles()
         {
-            for (int wIndex = 0; wIndex < _mapInfo.Info.GetLength(0); ++wIndex)
+            RegionInformation[,] regions = _mapInfo.Info;
+
+            for (int wIndex = 0; wIndex < regions.GetLength(0); ++wIndex)
             {
-                for (int hIndex = 0; hIndex < _mapInfo.Info.GetLength(1); ++hIndex)
+                for (int hIndex = 0; hIndex < regions.GetLength(1); ++hIndex)
                 {
-                    Battle[] battles = _mapInfo.Info[wIndex, hIndex].Battles;
-                    if (battles == null)
+                    if (regions[wIndex, hIndex].Battles == null)
                         continue;
 
-                    foreach (Battle battle in battles)
+                    // Battles of current region for current step
+                    Battle[] battles = regions[wIndex, hIndex].Battles.Where(b => b.Step == _mapInfo.Step).ToArray();
+                    int battleCount = battles.Length;
+                    if (battleCount == 0)
+                        continue;
+
+                    RegionInformation targetRegion = regions[wIndex, hIndex];
+
+                    // TODO: Customize army distribution
+                    int defArmyCount = targetRegion.Army.Count / battleCount;
+                    int defArmyReminder = targetRegion.Army.Count % battleCount;
+                    int defReserveCount = targetRegion.Reserve.Count / battleCount;
+                    int defReserveReminder= targetRegion.Reserve.Count % battleCount;
+
+                    for (int i = 0; i < battleCount; ++i)
                     {
-                        if (battle.Step != _mapInfo.Step)
-                        {
-                            //throw new InvalidOperationException($"battle.Step ({battle.Step}) != _mapInfo.Step ({_mapInfo.Step})");
-                            continue;
-                        }
+                        Battle battle = battles[i];
 
                         // Initialize Defender army
-                        RegionInformation targetRegion = _mapInfo.Info[battle.Defender.From.X, battle.Defender.From.Y];
-                        battle.Defender.Count = targetRegion.Army.Count;
-                        battle.DefenderReserve.Count = targetRegion.Reserve.Count;
+                        battle.Defender.Count = (i == 0) ? (defArmyCount + defArmyReminder) : defArmyCount;
+                        battle.DefenderReserve.Count = (i == 0) ? (defReserveCount + defReserveReminder) : defReserveCount;
 
                         BattleProcessor.ProcessBattle(battle);
+                    }
 
-                        switch (battle.Result)
+                    // General result
+                    IEnumerable<Battle> attackerWinners = battles.Where(b => b.Result == BattleResult.AttackerWon);
+                    bool defenderLost = attackerWinners.Any();
+
+                    RegionInformation regionToRetreat = null;
+                    if (defenderLost)
+                    {
+                        RegionInformation[] ownRegions = regions.GetNearOwnRegions(targetRegion.Coordinates, targetRegion.Color);
+
+                        if (ownRegions != null && ownRegions.Length > 0)
                         {
-                            case BattleResult.AttackerWon:
-                            {
-                                // [TODO] Move defender army remainder to its near region
-                                RegionInformation[] regions = _mapInfo.Info.GetNearOwnRegions(targetRegion.Coordinates, targetRegion.Color);
-                                if (regions != null && regions.Length > 0)
-                                {
-                                    regions[0].Army.Count += battle.Defender.Count;
-                                }
-                                else
-                                {
-                                    MessageBox.Show($"Игрок '{targetRegion.Color}' проиграл!");
-                                }
+                            regionToRetreat = ownRegions[0];
+                            //regionToRetreat.Army.Count += battle.Defender.Count;
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Игрок '{targetRegion.Color}' проиграл!");
+                        }
+                    }
 
-                                targetRegion.Color = battle.Attacker.Color;
-                                targetRegion.Army.Count = battle.Attacker.Count;
-                                targetRegion.Reserve.Count = 0; // [TODO]: Rule of calculation of Reserve count
-                                break;
-                            }
-                            case BattleResult.AttackerLost:
-                            {
-                                targetRegion.Army.Count = battle.Defender.Count;
-                                targetRegion.Reserve.Count = battle.DefenderReserve.Count;
+                    List<Battle> nextStepBattles = new List<Battle>();
+                    Color winnerColor = Color.Empty; // TODO: Ensure this color cannot be a user color
 
-                                RegionInformation attackerRegion = _mapInfo.Info[battle.Attacker.From.X, battle.Attacker.From.Y];
-                                attackerRegion.Army.Count += battle.Attacker.Count;
-                                break;
-                            }
-                            case BattleResult.Draw:
+                    // TODO: Process scenario with various winners
+                    foreach (Battle battle in battles)
+                    {
+                        if (defenderLost)
+                        {
+                            switch (battle.Result)
                             {
-                                // [TODO]
-                                break;
+                                case BattleResult.AttackerWon:
+                                {
+                                    if (winnerColor == Color.Empty)
+                                    {
+                                        winnerColor = targetRegion.Color = battle.Attacker.Color;
+                                        targetRegion.Army.Count = battle.Attacker.Count;
+                                        targetRegion.Reserve.Count = 0; // [TODO]: Rule of calculation of Reserve count
+                                    }
+                                    else if (winnerColor == battle.Attacker.Color)
+                                    {
+                                        targetRegion.Army.Count += battle.Attacker.Count;
+                                    }
+                                    else
+                                    {
+                                        nextStepBattles.Add(new Battle
+                                        {
+                                            Attacker = battle.Attacker,
+                                            Defender = new Army
+                                            {
+                                                Color = winnerColor,
+                                                From = targetRegion.Coordinates,
+                                                // Count set dynamically
+                                            },
+                                            Step = _mapInfo.Step + 1
+                                        });
+                                    }
+
+                                    if (regionToRetreat == null)
+                                    {
+                                        throw new InvalidOperationException("regionToRetreat == null");
+                                    }
+                                    regionToRetreat.Army.Count += battle.Defender.Count;
+                                    break;
+                                }
+                                case BattleResult.AttackerLost:
+                                {
+                                    if (regionToRetreat == null)
+                                    {
+                                        throw new InvalidOperationException("regionToRetreat == null");
+                                    }
+                                    regionToRetreat.Army.Count += battle.Defender.Count;
+
+                                    RegionInformation attackerRegion = regions[battle.Attacker.From.X, battle.Attacker.From.Y];
+                                    attackerRegion.Army.Count += battle.Attacker.Count;
+                                    break;
+                                }
+                                case BattleResult.Draw:
+                                {
+                                    // [TODO]
+                                    break;
+                                }
+                            }
+                        }
+                        else // Defender did not lose
+                        {
+                            switch (battle.Result)
+                            {
+                                case BattleResult.AttackerWon:
+                                {
+                                    throw new InvalidOperationException("Defender did not lose, but an attacker won.");
+                                    /*targetRegion.Color = battle.Attacker.Color;
+                                    targetRegion.Army.Count = battle.Attacker.Count;
+                                    targetRegion.Reserve.Count = 0; // [TODO]: Rule of calculation of Reserve count
+                                    break;*/
+                                }
+                                case BattleResult.AttackerLost:
+                                {
+                                    targetRegion.Army.Count = battle.Defender.Count;
+                                    targetRegion.Reserve.Count = battle.DefenderReserve.Count;
+
+                                    RegionInformation attackerRegion = regions[battle.Attacker.From.X, battle.Attacker.From.Y];
+                                    attackerRegion.Army.Count += battle.Attacker.Count;
+                                    break;
+                                }
+                                case BattleResult.Draw:
+                                {
+                                    // [TODO]
+                                    break;
+                                }
                             }
                         }
                     }
 
-                    // Clear battles
-                    _mapInfo.Info[wIndex, hIndex].Battles = null;
+                    // Replace battles
+                    regions[wIndex, hIndex].Battles = nextStepBattles.ToArray();
                 }
             }
         }

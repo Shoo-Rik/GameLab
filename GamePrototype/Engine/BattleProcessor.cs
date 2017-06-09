@@ -115,9 +115,7 @@ namespace Engine
                 newAttackerCount = attackerCount - battle.DamageToAttacker;
                 newDefenderCount = defenderCount - battle.DamageToDefender;
 
-                battle.Result = (newAttackerCount > newDefenderCount)
-                    ? BattleResult.AttackerWon
-                    : BattleResult.AttackerLost; 
+                battle.Result = (newAttackerCount > newDefenderCount) ? BattleResult.AttackerWon : BattleResult.AttackerLost; 
                 // [TODO] BattleResult.Draw;
             }
             else if (battle.DamageToAttacker >= attackerCount && battle.DamageToDefender < defenderCount)
